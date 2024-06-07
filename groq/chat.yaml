@@ -38,7 +38,7 @@ nodes:
   llm:
     agent: groqAgent
     params:
-      model: Llama3-8b-8192
+      model: Llama3-7-1b-8192
     inputs:
       - null
       - :appendedMessages
