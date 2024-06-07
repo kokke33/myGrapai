@@ -1,0 +1,29 @@
+version: 0.3
+nodes:
+  userInput:
+    agent: textInputAgent
+    params:
+      message: "質問内容:"
+  prompt:
+    agent: stringTemplateAgent
+    params:
+      template: > 
+        質問は、「${0}」 です。
+        ５０文字程度で日本語で回答してほしい。
+    inputs: 
+      - :userInput
+  llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+    inputs: [:prompt]
+  output_question:
+    agent: copyAgent
+    inputs: 
+      - :prompt
+    isResult: true
+  output:
+    agent: copyAgent
+    inputs:
+      - :llm.choices.$0.message.content
+    isResult: true

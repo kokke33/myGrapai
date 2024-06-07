@@ -1,0 +1,51 @@
+version: 0.3
+nodes:
+  userInput:
+    agent: textInputAgent
+    params:
+      message: "質問内容:"
+  prompt:
+    agent: stringTemplateAgent
+    params:
+      template: > 
+        質問は、 ${0} です。
+        文字数は100文字程度。日本語で回答すること。
+    inputs: 
+      - :userInput
+  output_question:
+    agent: copyAgent
+    inputs: 
+      - :prompt
+    isResult: true
+  reGenQuestion:
+    agent: stringTemplateAgent
+    params:
+      template: > 
+        1.あなたは質問に関する文章の専門家です。
+        2.以下の【質問文】を推敲し推敲後の文章だけを返却してください。
+        3.AIが質問で返してくるような質問はしないでください。
+        
+        【質問文】 
+        ${0} です。
+    inputs: 
+      - :output_question
+  llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+    inputs: [:reGenQuestion]
+  output_AI_Checked_QA:
+    agent: copyAgent
+    inputs:
+      - :llm.choices.$0.message.content
+    isResult: true
+  llm2:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+    inputs: [:output_AI_Checked_QA] 
+  output_AI_Anser:
+    agent: copyAgent
+    inputs:
+      - :llm2.choices.$0.message.content
+    isResult: true

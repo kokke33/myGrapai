@@ -1,0 +1,100 @@
+version: 0.3
+loop:
+  while: :people
+nodes:
+  people:
+    value: [Steve Jobs, Elon Musk, Nikola Tesla]
+    update: :retriever.array
+  result:
+    value: []
+    update: :reducer
+    isResult: true
+  retriever:
+    agent: shiftAgent
+    inputs: [:people]
+  query:
+    agent: slashGPTAgent
+    params:
+      manifest:
+        prompt: >
+          "100文字で説明してください。フォーマットはJSONで、以下のフォーマットで。
+          ```json
+          [{Q:'Hello.', A:'こんにちは。'}]
+          ```"
+    inputs: [:retriever.item]
+  reducer:
+    agent: pushAgent
+    inputs: 
+      - :result
+      - :jsonOut
+  jsonOut:
+    agent: jsonParserAgent
+    # isResult: true
+    inputs:
+      - ":query.$2.content" #$2が目的のassistantの回答
+
+  # ログより
+  # {
+  #     "nodeId": "query",
+  #     "state": "completed",
+  #     "agentId": "slashGPTAgent",
+  #     "params": {
+  #       "manifest": {
+  #         "prompt": "100文字で説明してください。"
+  #       }
+  #     },
+  #     "isLoop": true,
+  #     "repeatCount": 0,
+  #     "startTime": 1717557925874,
+  #     "inputs": [
+  #       "retriever"
+  #     ],
+  #     "inputsData": [
+  #       "Steve Jobs"
+  #     ],
+  #     "result": [
+  #       {
+  #         "role": "system",
+  #         "content": "100文字で説明してください。",
+  #         "preset": true
+  #       },
+  #       {
+  #         "role": "user",
+  #         "content": "Steve Jobs",
+  #         "preset": false
+  #       },
+  #       {
+  #         "role": "assistant",
+  #         "content": "Steve JobsはApple Inc.の共同創業者であり、革新的な製品やデザインのリーダーとして知られています。彼はiPod、iPhone、iPadなど、多くの革新的な製品の開発に貢献し、Appleを世界有数のテクノロジー企業に成長させました。彼はリーダーシップとビジョンによって、テクノロジー業界に大きな影響を与えました。",
+  #         "preset": false
+  #       }
+  #     ],
+  #     "resultKeys": [
+  #       ":slashGPTAgent",
+  #       ":slashGPTAgent.$0",
+  #       ":slashGPTAgent.$0.role",
+  #       ":slashGPTAgent.$0.content",
+  #       ":slashGPTAgent.$0.name",
+  #       ":slashGPTAgent.$0.preset",
+  #       ":slashGPTAgent.$0.function_data",
+  #       ":slashGPTAgent.$0.usage",
+  #       ":slashGPTAgent.$0.tool_use_id",
+  #       ":slashGPTAgent.$1",
+  #       ":slashGPTAgent.$1.role",
+  #       ":slashGPTAgent.$1.content",
+  #       ":slashGPTAgent.$1.name",
+  #       ":slashGPTAgent.$1.preset",
+  #       ":slashGPTAgent.$1.function_data",
+  #       ":slashGPTAgent.$1.usage",
+  #       ":slashGPTAgent.$1.tool_use_id",
+  #       ":slashGPTAgent.$2",
+  #       ":slashGPTAgent.$2.role",
+  #       ":slashGPTAgent.$2.content",
+  #       ":slashGPTAgent.$2.name",
+  #       ":slashGPTAgent.$2.preset",
+  #       ":slashGPTAgent.$2.function_data",
+  #       ":slashGPTAgent.$2.usage",
+  #       ":slashGPTAgent.$2.tool_use_id"
+  #     ],
+  #     "endTime": 1717557928572
+  #   },
