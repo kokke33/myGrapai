@@ -3,7 +3,7 @@ nodes:
   name:
     agent: textInputAgent
     params:
-      message: "インタビューしたい有名人の名前:"
+      message: "インタビュー対象者:"
 
       # ★nameの結果
       # {
@@ -25,7 +25,6 @@ nodes:
       # },
 
 
-
   context:
     agent: stringTemplateAgent
     params:
@@ -39,7 +38,7 @@ nodes:
             50字以内で、日本語で回答して。
         person1:
           name: ${0}
-          system: あなたは ${0}.
+          system: あなたは ${0}。50文字以内で回答して。
           greeting: やあ, 私は ${0}
     inputs:
       - :name
@@ -207,7 +206,7 @@ nodes:
         - context
     graph:
       loop:
-        count: 2
+        count: 30
       nodes:
         messages:
           value: []
@@ -223,6 +222,8 @@ nodes:
           # params:
           #   model: Llama3-70b-8192
           inputs:
+            - null
+            - :messages
             # null,
             # [
             #   {
@@ -234,8 +235,6 @@ nodes:
             #     "content": "やあ, 私は 明治天皇"
             #   }
             # ]
-            - null
-            - :messages
 
           # ★LLMの結果
           # "result": {
@@ -423,7 +422,7 @@ nodes:
           #   "endTime": 1717838398914
           # },
 
-
+        # 先のLLMの回答を明治天皇の回答とする役割の入替
         swappedMessages:
           agent: propertyFilterAgent
           params:
@@ -510,3 +509,10 @@ nodes:
           #   ],
           #   "endTime": 1717838400156
           # },
+
+# ★結果
+# root@LAPTOP-BKR7HVD0:~/graphai/myGrapai# graphai myGrapai/interview2.yaml --log log/interview2.log 
+# ? インタビューしたい有名人の名前: 明治天皇
+# インタビュアー: 明治天皇、光栄です。まず、あなたが最も誇りに思う功績は何ですか？
+
+# 明治天皇: お会いできて光栄です。私が最も誇りに思う功績は、明治維新を通じて日本を近代国家へと導いたことです。具体的には、封建制度の廃止、中央集権的な政府の設立、西洋技術や文化の導入、そして新しい憲法の制定などが挙げられます。これらの改革により、日本は急速に近代化し、国際社会においても重要な地位を築くことができました。
