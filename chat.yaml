@@ -45,7 +45,7 @@ nodes:
   output:
     agent: stringTemplateAgent
     params:
-      template: "\e[32mLlama3\e[0m: ${0}"
+      template: "\e[32mL回答\e[0m: ${0}"
     console:
       after: true
     inputs:
