@@ -8,7 +8,7 @@ nodes:
     agent: stringTemplateAgent
     params:
       template: > 
-        質問は、 ${0} です。
+        質問は、 ${0} についてです。
         文字数は100文字程度。日本語で回答すること。
     inputs: 
       - :userInput

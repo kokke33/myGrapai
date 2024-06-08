@@ -22,3 +22,5 @@ nodes:
           agent: copyAgent
           inputs: [:llm.choices.$0.message.content]
           isResult: true
+  # output:
+    

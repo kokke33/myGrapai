@@ -1,11 +1,20 @@
 version: 0.3
 nodes:
+  prompt:
+    agent: echoAgent
+    params: 
+      - "test"
+    isResult: true
+  input: 
+    agent: textInputAgent
+    params:
+      message: "何について知りたい？" 
   llm:
     agent: openAIAgent
     params:
       model: gpt-4o
     inputs:
-      - Explain ML's transformer in 100 words.
+      - :input
   output:
     agent: copyAgent
     console:
