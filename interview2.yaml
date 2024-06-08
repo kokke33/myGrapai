@@ -4,6 +4,28 @@ nodes:
     agent: textInputAgent
     params:
       message: "インタビューしたい有名人の名前:"
+
+      # ★nameの結果
+      # {
+      #   "nodeId": "name",
+      #   "state": "completed",
+      #   "agentId": "textInputAgent",
+      #   "params": {
+      #     "message": "インタビューしたい有名人の名前:"
+      #   },
+      #   "isLoop": false,
+      #   "repeatCount": 0,
+      #   "startTime": 1717838396715,
+      #   "inputs": [],
+      #   "result": "明治天皇",
+      #   "resultKeys": [
+      #     ":textInputAgent"
+      #   ],
+      #   "endTime": 1717838398910
+      # },
+
+
+
   context:
     agent: stringTemplateAgent
     params:
@@ -22,21 +44,63 @@ nodes:
     inputs:
       - :name
 
+    # ★contextの結果
+    #   "nodeId": "context",
+    #   "state": "completed",
+    #   "agentId": "stringTemplateAgent",
+    #   "params": {
+    #     "template": {
+    #       "person0": {
+    #         "name": "インタビュアー",
+    #         "system": "あなたはプロのインタビュアーです。 その人の性格を深掘りし、厳しい質問をするのがあなたの仕事です。 観客を引き付けるために、一つ一つ質問を投げかけ、 次の話題に移る前に回答に対して反応してください。 50字以内で、日本語で回答して。"
+    #       },
+    #       "person1": {
+    #         "name": "${0}",
+    #         "system": "あなたは ${0}.",
+    #         "greeting": "やあ, 私は ${0}"
+    #       }
+    #     }
+    #   },
+    #   "isLoop": false,
+    #   "repeatCount": 0,
+    #   "startTime": 1717838398910,
+    #   "inputs": [
+    #     "name"
+    #   ],
+    #   "inputsData": [
+    #     "明治天皇"
+    #   ],
+    #   "result": {
+    #     "person0": {
+    #       "name": "インタビュアー",
+    #       "system": "あなたはプロのインタビュアーです。 その人の性格を深掘りし、厳しい質問をするのがあなたの仕事です。 観客を引き付けるために、一つ一つ質問を投げかけ、 次の話題に移る前に回答に対して反応してください。 50字以内で、日本語で回答して。"
+    #     },
+    #     "person1": {
+    #       "name": "明治天皇",
+    #       "system": "あなたは 明治天皇.",
+    #       "greeting": "やあ, 私は 明治天皇"
+    #     }
+    #   },
+    #   "resultKeys": [
+    #     ":stringTemplateAgent",
+    #     ":stringTemplateAgent.person0",
+    #     ":stringTemplateAgent.person0.name",
+    #     ":stringTemplateAgent.person0.system",
+    #     ":stringTemplateAgent.person1",
+    #     ":stringTemplateAgent.person1.name",
+    #     ":stringTemplateAgent.person1.system",
+    #     ":stringTemplateAgent.person1.greeting"
+    #   ],
+    #   "endTime": 1717838398910
+    # },
+
+
 
   # messageの定義
   messages:
     agent: propertyFilterAgent
     params:
       inject:
-        # データイメージ
-          # {
-          #   "role": "system",
-          #   "content": "あなたはプロのインタビュアーです。～"
-          # },
-          # {
-          #   "role": "user",
-          #   "content": "やあ, 私は tesla"
-          # }
         - index: 0
           propId: content
           from: 1
@@ -48,11 +112,73 @@ nodes:
         - role: user
       - :context.person0.system
       - :context.person1.greeting
-  # ここからチャットのループ
+
+      # ★messagesの結果
+      #   "nodeId": "messages",
+      #   "state": "completed",
+      #   "agentId": "propertyFilterAgent",
+      #   "params": {
+      #     "inject": [
+      #       {
+      #         "index": 0,
+      #         "propId": "content",
+      #         "from": 1
+      #       },
+      #       {
+      #         "index": 1,
+      #         "propId": "content",
+      #         "from": 2
+      #       }
+      #     ]
+      #   },
+      #   "isLoop": false,
+      #   "repeatCount": 0,
+      #   "startTime": 1717838398911,
+      #   "inputs": [
+      #     "context",
+      #     "context"
+      #   ],
+      #   "inputsData": [
+      #     [
+      #       {
+      #         "role": "system"
+      #       },
+      #       {
+      #         "role": "user"
+      #       }
+      #     ],
+      #     "あなたはプロのインタビュアーです。 その人の性格を深掘りし、厳しい質問をするのがあなたの仕事です。 観客を引き付けるために、一つ一つ質問を投げかけ、 次の話題に移る前に回答に対して反応してください。 50字以内で、日本語で回答して。",
+      #     "やあ, 私は 明治天皇"
+      #   ],
+      #   "result": [
+      #     {
+      #       "role": "system",
+      #       "content": "あなたはプロのインタビュアーです。 その人の性格を深掘りし、厳しい質問をするのがあなたの仕事です。 観客を引き付けるために、一つ一つ質問を投げかけ、 次の話題に移る前に回答に対して反応してください。 50字以内で、日本語で回答して。"
+      #     },
+      #     {
+      #       "role": "user",
+      #       "content": "やあ, 私は 明治天皇"
+      #     }
+      #   ],
+      #   "resultKeys": [
+      #     ":propertyFilterAgent",
+      #     ":propertyFilterAgent.$0",
+      #     ":propertyFilterAgent.$0.role",
+      #     ":propertyFilterAgent.$0.content",
+      #     ":propertyFilterAgent.$1",
+      #     ":propertyFilterAgent.$1.role",
+      #     ":propertyFilterAgent.$1.content"
+      #   ],
+      #   "endTime": 1717838398911
+      # },
+
+
   chat:
     agent: nestedAgent
     # nestedAgentのインプットは２つあって、揃ってないと動かない
     inputs:
+      - :messages
+      - :context
     #   [
     #     {
     #       "role": "system",
@@ -63,7 +189,6 @@ nodes:
     #       "content": "やあ, 私は 明治天皇"
     #     }
     #   ],
-      - :messages
     #   {
     #     "person0": {
     #       "name": "インタビュアー",
@@ -76,7 +201,6 @@ nodes:
     #     }
     #   }
     # ],
-      - :context
     params:
       namedInputs:
         - messages
