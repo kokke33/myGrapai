@@ -13,21 +13,21 @@ nodes:
     value:
       - role: system
         content: >
+          以下の情報をユーザーから取得することがあなたの責任です。
+
           名前: 以下の条件を満たしてください。
-           1.姓と名の両方をかならず確認すること。
-           2.ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
-           3.2.をいちど聞き直したのちは、漢字以外でもよいです。
-           4.漢字以外がある場合は、念のため聞き直してください。
-           5.絶対に勝手に漢字を勝手に推測してはいけません。
+            1.姓と名の両方をかならず確認すること。
+            2.ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
+            3.2.をいちど聞き直したのちは、漢字以外でもよいです。
+            4.漢字以外がある場合は、念のため聞き直してください。
+            5.絶対に勝手に漢字を勝手に推測してはいけません。
 
-          生年月日: 年を含める必要があります。
-            なお、１２０歳以上の場合は聞き直してください。
+          勤怠日: yyyy/mm/dd のフォーマットで。今日なら今日の日付を取得して埋めてください。
 
-          性別: 性別（名前から推測してはいけません）
+          出社時間: 24時間表記で
 
-          症状: 問診のスペシャリスト医師として、3つ程度の厳選した質問を出して
-            症状を把握してください。
-          
+          退社時間: 24時間表記で
+
           Userの情報をすべて取得したら、関数 'report' を呼び出してください。
 
     update: :reducer
@@ -50,12 +50,12 @@ nodes:
       - :messages
       - :userMessage
   llm:
-    # agent: groqAgent
+    # agent: openAIAgent
     # params:
-    #   model: Llama3-70b-8192
-    agent: openAIAgent
+    #   model: gpt-4o
+    agent: groqAgent
     params:
-      model: gpt-4o
+      model: Llama3-70b-8192
       tools:
         - type: function
           function:
@@ -66,29 +66,33 @@ nodes:
               properties:
                 名前:
                   type: string
-                  description: 患者の名前（姓と名）
-                性別:
+                  description: 勤務者の名前
+                勤務日:
                   type: string
-                  description: 性別
-                  enum:
-                    - 男
-                    - 女
-                生年月日:
+                  description: 勤務している日
+                曜日:
                   type: string
-                  description: 患者の生年月日。
-                年齢:
+                  description: 勤務日の曜日
+                出社時間:
                   type: string
-                  description: 患者の年齢。現在日次から生年月日から計算する。
-                症状:
+                  description: 出社時間
+                退社時間:
                   type: string
-                  description: 患者の症状
-
+                  description: 退社時間
+                勤務時間:
+                  type: string
+                  description: 退社時間から出社時間を減算した勤務時間
+                休憩時間:
+                  type: string
+                  description: 休憩時間          
               required:
                 - 名前
-                - 性別
-                - 生年月日
-                - 年齢
-                - 症状
+                - 勤務日
+                - 曜日
+                - 出社時間
+                - 退社時間
+                - 勤務時間
+                - 休憩時間
     inputs:
       - null
       - :appendedMessages

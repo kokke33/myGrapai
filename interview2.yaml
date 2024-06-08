@@ -69,6 +69,8 @@ nodes:
           update: :swappedContext
         llm:
           agent: openAIAgent
+          params:
+            model: gpt-4o
           # agent: groqAgent
           # params:
           #   model: Llama3-70b-8192

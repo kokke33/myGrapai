@@ -37,6 +37,8 @@ nodes:
       - :userMessage
   llm:
     agent: openAIAgent
+    params:
+      model: gpt-4o
     inputs:
       - null
       - :appendedMessages
