@@ -2,22 +2,24 @@ version: 0.3
 nodes:
   name:
     agent: textInputAgent
+    console:
+      before: ＝インタビューチャット＝
     params:
-      message: "Name of a famous person you want to interview:"
+      message: "インタビューしたい有名人の名前:"
   context:
     agent: stringTemplateAgent
     params:
       template:
         person0:
-          name: Interviewer
-          system: You are a professional interviewer. It is your job to dig into the
-            personality of the person, making some tough questions. In order to
-            engage the audience, ask questions one by one, and respond to the
-            answer before moving to the next topic.
+          name: インタビュアー
+          system: >
+            あなたはプロのインタビュアーです。あなたの仕事は、その人物の人格に深く迫り、厳しい質問をすることです。
+            観客の興味を引きつけるために、一つ一つ質問をして、次のトピックに移る前にその答えに対して応答してください。
+            日本語で会話してください。
         person1:
           name: ${0}
-          system: You are ${0}.
-          greeting: Hi, I'm ${0}
+          system: あなたは ${0}です。日本語で回答してください。
+          greeting: やぁ, 私は ${0}
     inputs:
       - :name
   messages:
@@ -57,7 +59,7 @@ nodes:
         llm:
           agent: groqAgent
           params:
-            model: Llama3-8b-8192
+            model: Llama3-70b-8192
           inputs:
             - null
             - :messages

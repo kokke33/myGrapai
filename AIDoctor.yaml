@@ -32,6 +32,8 @@ nodes:
 
     update: :reducer
   userInput:
+    console:
+      before: これから診察を始めます。まずはあなたの名前を教えてください。
     agent: textInputAgent
     params:
       message: "あなた:"

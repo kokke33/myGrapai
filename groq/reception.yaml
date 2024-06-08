@@ -14,7 +14,7 @@ nodes:
       - role: system
         content: >
           You  are responsible in retrieving following information from the
-          user.
+          user. in japanese.
 
           name: both first and last name
 
