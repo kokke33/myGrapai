@@ -13,33 +13,34 @@ nodes:
     params:
       include:
         - title
-        # - link
-        # - content
+        - link
+        - content
     inputs:
       - :rssFeed.feed.entry
     # isResult: true
   map:
     agent: mapAgent  # Processes each entry concurrently.
     inputs: [:entries]
-    # isResult: true
     params:
       limit: 4  # to avoid rate limit
+    isResult: true
     graph:
       nodes:
         prompt:
           agent: stringTemplateAgent  # Extracts title and content, then generate a single text
           params:
-            template: Title:${0}\n$
-          inputs: [:$0.title]
-            # - [:$0.content._]
+            template: Title:${0}\n ${1}
+          inputs: [:$0.title,:$0.content._]
         llm:
-          agent: groqAgent  # Asks the LLM to summarize it
+          # agent: groqAgent  # Asks the LLM to summarize it
+          # params:
+          #   model: Llama3-8b-8192  # "mixtral-8x7b-32768"
+          agent: openAIAgent  # Asks the LLM to summarize it
           params:
-            model: Llama3-8b-8192  # "mixtral-8x7b-32768"
+            model: gpt-4o  # "mixtral-8x7b-32768"
             query: "次のHTMLからテキストだけを抜き出し、省略せずに、全文を日本語に翻訳して。余計なことは言わずに、翻訳した文章だけ答えて。"
           inputs: [:prompt]
         result:
           agent: "copyAgent"  # Extract the content from the generated message
-          inputs:
-            - [:llm.choices.$0.message.content]
+          inputs: [:llm.choices.$0.message.content]
           isResult: true

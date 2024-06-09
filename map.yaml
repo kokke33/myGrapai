@@ -5,7 +5,9 @@ nodes:
   map:
     agent: mapAgent
     inputs: [:fruits]
-    isResult: true
+    # isResult: true
+    # params:
+    #   limit: 2
     graph:
       nodes:
         prompt:
