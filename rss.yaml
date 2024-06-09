@@ -17,7 +17,7 @@ nodes:
         - content
     inputs:
       - :rssFeed.feed.entry
-    # isResult: true
+    isResult: true
   map:
     agent: mapAgent  # Processes each entry concurrently.
     inputs: [:entries]
@@ -29,7 +29,7 @@ nodes:
         prompt:
           agent: stringTemplateAgent  # Extracts title and content, then generate a single text
           params:
-            template: Title:${0}\n ${1}
+            template: Title:${0} ${1}
           inputs: [:$0.title,:$0.content._]
         llm:
           # agent: groqAgent  # Asks the LLM to summarize it
@@ -38,9 +38,19 @@ nodes:
           agent: openAIAgent  # Asks the LLM to summarize it
           params:
             model: gpt-4o  # "mixtral-8x7b-32768"
-            query: "次のHTMLからテキストだけを抜き出し、省略せずに、全文を日本語に翻訳して。余計なことは言わずに、翻訳した文章だけ答えて。"
+            query: >
+              "次のHTMLからテキストだけを抜き出し、省略せずに、全文を日本語に翻訳して。余計なことは言わずに、翻訳した文章だけ答えて。
+              あまり難しい単語は使わずに。フォーマットはJSONで、以下のフォーマットで。
+              ```json
+              [{title:'Hello.', content:'こんにちは。'}]
+              ```"
           inputs: [:prompt]
         result:
           agent: "copyAgent"  # Extract the content from the generated message
           inputs: [:llm.choices.$0.message.content]
+        argumentsParser:
+          agent: jsonParserAgent
+          inputs:
+            - :result
           isResult: true
+          
