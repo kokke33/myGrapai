@@ -17,7 +17,7 @@ nodes:
         - content
     inputs:
       - :rssFeed.feed.entry
-    isResult: true
+    # isResult: true
   map:
     agent: mapAgent  # Processes each entry concurrently.
     inputs: [:entries]
