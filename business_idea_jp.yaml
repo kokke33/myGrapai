@@ -23,7 +23,7 @@ nodes:
     inputs: [":node1.choices.$0.message.content", ":node3.choices.$0.message.content"]
     params:
       template: |
-        このビジネスアイデアコンテストの優勝者を選んでください.
+        このビジネスアイデアコンテストの優勝者を選んでください。
         [アイデア]
         ${0}
         [評価]
