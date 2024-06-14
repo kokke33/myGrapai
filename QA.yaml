@@ -3,7 +3,7 @@ nodes:
   userInput:
     agent: textInputAgent
     params:
-      message: "質問内容:"
+      message: "質問内容::"
   prompt:
     agent: stringTemplateAgent
     params:
