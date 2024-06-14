@@ -6,7 +6,10 @@ nodes:
     params:
       model: gpt-4
     inputs:
-      prompt: "AIスタートアップのビジネスアイデアを10個考えてください"
+      prompt: |
+        "GraphAIを用いたスタートアップのビジネスアイデアを10個考えてください。
+        GraphAIの情報は以下のURLを参考にしてください。
+        https://receptron.github.io/graphai/apiDoc/index.html"
   node2:
     agent: stringTemplateAgent
     inputs: [":node1.choices.$0.message.content"]
