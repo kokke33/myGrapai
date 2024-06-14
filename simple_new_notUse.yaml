@@ -1,0 +1,19 @@
+verbose: true
+version: 0.5
+nodes:
+  prompt2:
+    value: "Explain ML's transformer in 100 words.in japanese"
+  llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+    inputs:
+      prompt: 
+        :prompt2
+    isResult: true
+  # output:
+  #   agent: copyAgent
+  #   console:
+  #     after: true
+  #   inputs:
+  #     - :llm.choices.$0.message.content

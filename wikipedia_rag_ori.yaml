@@ -2,9 +2,9 @@ version: 0.3
 nodes:
   source:
     value:
-      name: ひとまねこざる
-      topic: ひとまねこざるについて
-      query: ひとまねこざるの内容について教えて。日本語で。
+      name: Sam Bankman-Fried
+      topic: sentence by the court
+      query: describe the final sentence by the court for Sam Bank-Fried
   wikipedia:
     console:
       before: ...fetching data from wikkpedia
@@ -12,7 +12,7 @@ nodes:
     inputs:
       - :source.name
     params:
-      lang: ja
+      lang: en
   chunks:
     console:
       before: ...splitting the article into chunks
@@ -60,9 +60,7 @@ nodes:
   RagQuery:
     console:
       before: ...performing the RAG query
-    agent: groqAgent
-    params:
-      model: Llama3-70b-8192
+    agent: openAIAgent
     inputs:
       - :prompt
   OneShotQuery:
