@@ -2,9 +2,9 @@ version: 0.3
 nodes:
   source:
     value:
-      name: 三大ピラミッド
-      topic: 三大ピラミッドについて
-      query: 三大ピラミッドについて教えて。日本語で。
+      name: DQN
+      topic: 語源について
+      query: DQNについての語源について説明してください。
   wikipedia:
     console:
       before: ...fetching data from wikkpedia

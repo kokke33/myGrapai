@@ -3,7 +3,7 @@ nodes:
   prompt:
     # value: "Explain ML's transformer in 100 words.in japanese"
     value: >
-        "GraphAIを用いたスタートアップのビジネスアイデアを2個考えてください。
+        "GraphAIを用いたスタートアップのビジネスアイデアを5個考えてください。
         GraphAIの情報は以下のURLを参考にしてください。
         https://receptron.github.io/graphai/apiDoc/index.html"
   node1:

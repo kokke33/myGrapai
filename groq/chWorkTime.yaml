@@ -15,26 +15,28 @@ nodes:
         content: >
           以下の情報をユーザーから取得することがあなたの責任です。
 
-          名前: 以下の条件を満たしてください。
-            1.姓と名の両方をかならず確認すること。
+          1.userName: 以下の条件を満たしてください。
+            姓と名の両方をかならず確認すること。
             2.ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
             3.2.をいちど聞き直したのちは、漢字以外でもよいです。
             4.漢字以外がある場合は、念のため聞き直してください。
             5.絶対に勝手に漢字を勝手に推測してはいけません。
 
-          勤怠日: yyyy/mm/dd のフォーマットで。今日なら今日の日付を取得して埋めてください。
+          2.date: yyyy/mm/dd のフォーマットで。今日なら今日の日付を取得して埋めてください。
 
-          出社時間: 24時間表記で
+          3.workStartTime: 24時間表記で。HHMM形式でも許可。
 
-          退社時間: 24時間表記で
+          4.workEndTime: 24時間表記で。HHMM形式でも許可。
 
-          Userの情報をすべて取得したら、関数 'report' を呼び出してください。
+          上記4つの情報をすべて取得したら、関数 'report' を呼び出してください。
 
     update: :reducer
   userInput:
     agent: textInputAgent
     params:
       message: "あなた:"
+    # console:
+    #   before: 勤怠情報をまとめます。まずは名前を教えてください。
   userMessage:
     agent: propertyFilterAgent
     params:
@@ -50,12 +52,12 @@ nodes:
       - :messages
       - :userMessage
   llm:
-    # agent: openAIAgent
-    # params:
-    #   model: gpt-4o
-    agent: groqAgent
+    agent: openAIAgent
     params:
-      model: Llama3-70b-8192
+      model: gpt-4o
+    # agent: groqAgent
+    # params:
+    #   model: Llama3-70b-8192
       tools:
         - type: function
           function:
@@ -64,35 +66,35 @@ nodes:
             parameters:
               type: object
               properties:
-                名前:
+                userName:
                   type: string
                   description: 勤務者の名前
-                勤務日:
+                date:
                   type: string
-                  description: 勤務している日
-                曜日:
-                  type: string
-                  description: 勤務日の曜日
-                出社時間:
+                  description: 勤務日
+                # weekday:
+                #   type: string
+                #   description: 勤務日の曜日
+                workStartTime:
                   type: string
                   description: 出社時間
-                退社時間:
+                workEndTime:
                   type: string
                   description: 退社時間
-                勤務時間:
-                  type: string
-                  description: 退社時間から出社時間を減算した勤務時間
-                休憩時間:
-                  type: string
-                  description: 休憩時間          
+                # workTotalTime:
+                #   type: string
+                #   description: 退社時間から出社時間を減算した勤務時間
+                # workRestTime:
+                #   type: string
+                #   description: 休憩時間          
               required:
-                - 名前
-                - 勤務日
-                - 曜日
-                - 出社時間
-                - 退社時間
-                - 勤務時間
-                - 休憩時間
+                - name
+                - date
+                # - weekday
+                - workStartTime
+                - workEndTime
+                # - workTotalTime
+                # - workRestTime
     inputs:
       - null
       - :appendedMessages
@@ -100,8 +102,18 @@ nodes:
   argumentsParser:
     agent: jsonParserAgent
     inputs:
+      - :meaning_llm.choices.$0.message.content
+    if: :llm.choices.$0.message.tool_calls
+  meaning_llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+      system: >
+        "weekdayを追加して"
+    inputs:
       - :llm.choices.$0.message.tool_calls.$0.function.arguments
     if: :llm.choices.$0.message.tool_calls
+    # isResult: true
   output:
     agent: stringTemplateAgent
     params:
