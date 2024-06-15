@@ -2,13 +2,18 @@ version: 0.3
 loop:
   while: :continue
 nodes:
+  # 繰り返し定義
   continue:
     value: true
     update: :llm.choices.$0.message.content
+
+  # 最終結果の出力
   information:
     value: {}
     update: :argumentsParser
     isResult: true
+
+  # メッセージ
   messages:
     value:
       - role: system
@@ -32,12 +37,14 @@ nodes:
           上記4つの情報をすべて取得したら、関数 'report' を呼び出してください。
 
     update: :reducer
+
   userInput:
     agent: textInputAgent
     params:
       message: "あなた:"
     # console:
     #   before: 勤怠情報をまとめます。まずは名前を教えてください。
+
   userMessage:
     agent: propertyFilterAgent
     params:
@@ -47,11 +54,14 @@ nodes:
     inputs:
       - role: user
       - :userInput
+
   appendedMessages:
     agent: pushAgent
     inputs:
       - :messages
       - :userMessage
+      
+# LLM
   llm:
     agent: openAIAgent
     params:
@@ -116,12 +126,14 @@ nodes:
         "入力データをもとに、以下を追加して。
           1.weekdayを追加
           2.休憩時間を追加（労働時間が6時間以上の場合は1時間必要）
-          3.深夜時間を追加（22時～05時の間は深夜時間）"
+          3.深夜時間を追加（22時～05時の間は深夜時間）
+          4.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）
+        "
     inputs:
       - :llm.choices.$0.message.tool_calls.$0.function.arguments
     if: :llm.choices.$0.message.tool_calls
   
-  # 次の結果
+  # LLMの結果を返却
   output:
     agent: stringTemplateAgent
     params:

@@ -2,33 +2,39 @@ version: 0.3
 loop:
   while: :continue
 nodes:
+  # 繰り返し定義
   continue:
     value: true
     update: :llm.choices.$0.message.content
+  # 最終結果の出力
   information:
     value: {}
     update: :argumentsParser
     isResult: true
+  # メッセージ
   messages:
     value:
       - role: system
         content: >
-          名前: 以下の条件を満たしてください。。
-           1.姓と名の両方をかならず確認すること。
-           2.ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
-           3.2.をいちど聞き直したのちは、漢字以外でもよいです。
-           4.漢字以外がある場合は、念のため聞き直してください。
-           5.絶対に勝手に漢字を勝手に推測してはいけません。
+          以下の情報をユーザーから取得することがあなたの責任です。
+          １つ１つ確実に質問をしてください。
+          
+          1.名前: 以下の条件を満たしてください。。
+           ・姓と名の両方をかならず確認すること。
+           ・ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
+           ・一度聞き直したのちは、漢字以外でもよいです。
+           ・漢字以外がある場合は、念のため聞き直してください。
+           ・絶対に勝手に漢字を勝手に推測してはいけません。
 
-          生年月日: 年を含める必要があります。
+          2.生年月日: 年を含める必要があります。
             なお、１２０歳以上の場合は聞き直してください。
 
-          性別: 性別（名前から推測してはいけません）
+          3.性別: 性別（名前から推測してはいけません）
 
-          症状: 問診のスペシャリスト医師として、3つ程度の厳選した質問を出して
+          4.症状: 問診のスペシャリスト医師として、3つ程度の厳選した質問を出して
             症状を把握してください。
           
-          Userの情報をすべて取得したら、関数 'report' を呼び出してください。
+          上記4つの情報をすべて取得したら、関数 'report' を呼び出してください。
 
     update: :reducer
   userInput:
@@ -49,6 +55,8 @@ nodes:
     inputs:
       - :messages
       - :userMessage
+  
+  # LLM
   llm:
     # agent: groqAgent
     # params:
@@ -64,40 +72,53 @@ nodes:
             parameters:
               type: object
               properties:
-                名前:
+                name:
                   type: string
                   description: 患者の名前（姓と名）
-                性別:
+                birthday:
+                  type: string
+                  description: 患者の生年月日。
+                sex:
                   type: string
                   description: 性別
                   enum:
                     - 男
                     - 女
-                生年月日:
-                  type: string
-                  description: 患者の生年月日。
-                年齢:
-                  type: string
-                  description: 患者の年齢。現在日次から生年月日から計算する。
-                症状:
+                symptom:
                   type: string
                   description: 患者の症状
 
               required:
-                - 名前
-                - 性別
-                - 生年月日
-                - 年齢
-                - 症状
+                - name
+                - birthday
+                - sex
+                - symptom
     inputs:
       - null
       - :appendedMessages
       
+  # Json形式に修正
   argumentsParser:
     agent: jsonParserAgent
     inputs:
+      - :meaning_llm.choices.$0.message.content
+    if: :llm.choices.$0.message.tool_calls
+
+  # 結果に対してLLMで情報追加
+  meaning_llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+      system: >
+        "入力データをもとに、以下を追加して。
+          1.年齢を追加（誕生日から計算して）
+          2.応急処置を追加（症状に対する応急処置を具体的に）
+        "
+    inputs:
       - :llm.choices.$0.message.tool_calls.$0.function.arguments
     if: :llm.choices.$0.message.tool_calls
+ 
+  # LLMの結果を返却
   output:
     agent: stringTemplateAgent
     params:
@@ -107,6 +128,8 @@ nodes:
     inputs:
       - :llm.choices.$0.message.content
     if: :llm.choices.$0.message.content
+
+  # LLMの結果を配列に入れる
   reducer:
     agent: pushAgent
     inputs:

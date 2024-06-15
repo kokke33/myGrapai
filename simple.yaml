@@ -5,7 +5,7 @@ nodes:
     params:
       model: gpt-4o
     inputs:
-      - これから問診を始めます
+      - 今日の日付は？
   output:
     agent: copyAgent
     console:
