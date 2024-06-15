@@ -14,6 +14,7 @@ nodes:
       - role: system
         content: >
           以下の情報をユーザーから取得することがあなたの責任です。
+          １つ１つ確実に質問をしてください。
 
           1.userName: 以下の条件を満たしてください。
             姓と名の両方をかならず確認すること。
@@ -77,10 +78,10 @@ nodes:
                 #   description: 勤務日の曜日
                 workStartTime:
                   type: string
-                  description: 出社時間
+                  description: 出社時間（hh:mm）
                 workEndTime:
                   type: string
-                  description: 退社時間
+                  description: 退社時間（hh:mm）
                 # workTotalTime:
                 #   type: string
                 #   description: 退社時間から出社時間を減算した勤務時間
@@ -98,22 +99,29 @@ nodes:
     inputs:
       - null
       - :appendedMessages
-      
+  
+  # Json形式に修正
   argumentsParser:
     agent: jsonParserAgent
     inputs:
       - :meaning_llm.choices.$0.message.content
     if: :llm.choices.$0.message.tool_calls
+
+  # 結果に対してLLMで情報追加
   meaning_llm:
     agent: openAIAgent
     params:
       model: gpt-4o
       system: >
-        "weekdayを追加して"
+        "入力データをもとに、以下を追加して。
+          1.weekdayを追加
+          2.休憩時間を追加（労働時間が6時間以上の場合は1時間必要）
+          3.深夜時間を追加（22時～05時の間は深夜時間）"
     inputs:
       - :llm.choices.$0.message.tool_calls.$0.function.arguments
     if: :llm.choices.$0.message.tool_calls
-    # isResult: true
+  
+  # 次の結果
   output:
     agent: stringTemplateAgent
     params:
@@ -123,6 +131,8 @@ nodes:
     inputs:
       - :llm.choices.$0.message.content
     if: :llm.choices.$0.message.content
+
+  # LLMの結果を配列に入れる
   reducer:
     agent: pushAgent
     inputs:
