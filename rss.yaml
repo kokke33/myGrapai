@@ -3,13 +3,15 @@ nodes:
   url:
     value: "https://www.theverge.com/microsoft/rss/index.xml"  # Holds the RSS feed URL
   rssFeed:
-    agent: fetchAgent  # Fetchs the RSS feed from the specified feed
+    # Fetchs the RSS feed from the specified feed
+    agent: fetchAgent 
     params:
       type: xml
     inputs:
         - :url
   entries:
-    agent: propertyFilterAgent  # Extracts necessary information from the feed
+    # Extracts necessary information from the feed
+    agent: propertyFilterAgent 
     params:
       include:
         - title
@@ -18,16 +20,19 @@ nodes:
     inputs:
       - :rssFeed.feed.entry
     # isResult: true
-  map:
-    agent: mapAgent  # Processes each entry concurrently.
+  map:  
+    # Processes each entry concurrently.
+    agent: mapAgent  
     inputs: [:entries]
     params:
-      limit: 4  # to avoid rate limit
+      # to avoid rate limit
+      limit: 4  
     isResult: true
     graph:
       nodes:
         prompt:
-          agent: stringTemplateAgent  # Extracts title and content, then generate a single text
+          # Extracts title and content, then generate a single text
+          agent: stringTemplateAgent  
           params:
             template: Title:${0} ${1}
           inputs: [:$0.title,:$0.content._]
@@ -46,7 +51,8 @@ nodes:
               ```"
           inputs: [:prompt]
         result:
-          agent: "copyAgent"  # Extract the content from the generated message
+          # Extract the content from the generated message
+          agent: "copyAgent" 
           inputs: [:llm.choices.$0.message.content]
         argumentsParser:
           agent: jsonParserAgent
