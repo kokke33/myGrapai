@@ -1,16 +1,47 @@
 version: 0.3
+loop:
+  while: :continue
 nodes:
-  source:
-    value:
-      name: DQN
-      topic: 語源について
-      query: DQNについての語源について説明してください。
+  continue:
+    value: true
+    update: :checkInput.continue
+
+  userInput_name:
+    agent: textInputAgent
+    params:
+      message: "トピック:"  
+    console:
+      before: "何について知りたいですか？"
+  checkInput:
+    agent: propertyFilterAgent
+    params:
+      inspect:
+        - propId: continue
+          notEqual: /bye
+    inputs:
+      - {}
+      - :userInput_name      
+  prompt_topic:
+    agent: stringTemplateAgent
+    params:
+      template: > 
+        「${0}」について日本語で回答してください。
+    inputs: 
+      - :userInput_name
+  prompt_query:
+    agent: stringTemplateAgent
+    params:
+      template: > 
+        「${0}」について教えてください。
+    inputs: 
+      - :userInput_name        
+      
   wikipedia:
     console:
-      before: ...fetching data from wikkpedia
+      after: ...fetching data from wikkpedia
     agent: wikipediaAgent
     inputs:
-      - :source.name
+      - :userInput_name
     params:
       lang: ja
   chunks:
@@ -30,7 +61,7 @@ nodes:
       before: ...fetching embedding for the topic
     agent: stringEmbeddingsAgent
     inputs:
-      - :source.topic
+      - :prompt_topic
   similarityCheck:
     agent: dotProductAgent
     inputs:
@@ -50,32 +81,53 @@ nodes:
   prompt:
     agent: stringTemplateAgent
     inputs:
-      - :source.query
+      - :prompt_query
       - :referenceText.content
     params:
       template: |-
         Using the following document, ${0}
 
         ${1}
+
+  #クエリ実行 
   RagQuery:
     console:
       before: ...performing the RAG query
     agent: groqAgent
     params:
       model: Llama3-70b-8192
+      query: >
+        "全文を日本語に翻訳して。余計なことは言わずに、翻訳した文章だけ答えて。
+        あまり難しい単語は使わずに。
     inputs:
       - :prompt
   OneShotQuery:
     agent: openAIAgent
+    params:
+      model: gpt-4o
     inputs:
-      - :source.query
+      - :prompt_query
+
+  # 結果出力（isResulet:trueのためにCopyAgent使っている）
   RagResult:
     agent: copyAgent
     inputs:
       - :RagQuery.choices.$0.message.content
-    isResult: true
+    # isResult: true
   OneShotResult:
     agent: copyAgent
     inputs:
       - :OneShotQuery.choices.$0.message.content
-    isResult: true
+    # isResult: true
+
+  AllResult_output:
+    agent: stringTemplateAgent
+    params:
+      template: "\e[32m回答\e[0m: \n \e[32m■ Wikipedia\e[0m: ${0} \n\n\e[32m★ GPT-4go\e[0m:${1}"
+    console:
+      after: true
+    inputs:
+      - :RagResult
+      - :OneShotResult
+
+  

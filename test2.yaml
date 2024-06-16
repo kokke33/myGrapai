@@ -4,6 +4,8 @@ nodes:
     agent: textInputAgent
     params:
       message: "質問内容:"
+    console:
+      before: "質問内容を入力してください"    
   prompt:
     agent: stringTemplateAgent
     params:
