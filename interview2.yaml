@@ -206,7 +206,7 @@ nodes:
         - context
     graph:
       loop:
-        count: 30
+        count: 10
       nodes:
         messages:
           value: []
