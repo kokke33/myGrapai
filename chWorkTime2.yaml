@@ -18,19 +18,46 @@ nodes:
     value:
       - role: system
         content: >
-          以下の情報をユーザーから取得することがあなたの責任です。
-          １つ１つ確実に質問をしてください。
+          以下6つの情報をユーザーから取得することがあなたの責任です。
+          1.userName
+          2.date
+          3.workStartTime
+          4.workEndTime
+          5-1.breakTimeStart
+          5-2.breakTimeEnd        
+
+          必ず１つ１つ確実に質問をしてください。一度に質問することはダメです。
           1.userName: 以下の条件を満たしてください。
-            姓と名の両方をかならず確認すること。
-            2.ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
-            3.2.をいちど聞き直したのちは、漢字以外でもよいです。
-            4.漢字以外がある場合は、念のため聞き直してください。
-            5.絶対に勝手に漢字を勝手に推測してはいけません。
-          2.date: yyyy/mm/dd のフォーマットで。今日なら今日の日付を取得して埋めてください。
+            a.姓と名の両方をかならず確認すること。
+            b.ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
+            c.b.をいちど聞き直したのちは、漢字以外でもよいです。
+            d.漢字以外がある場合は、念のため聞き直してください。
+            e.絶対に勝手に漢字を勝手に推測してはいけません。
+
+          2.date: yyyy/mm/dd のフォーマットで。yyyy年mm月dd日でもよい。
+            もしくはYYYYMMDDでもよい。
+          
           3.workStartTime: 24時間表記で。HHMM形式でも許可。
+
           4.workEndTime: 24時間表記で。HHMM形式でも許可。
 
-          上記4つの情報をすべて取得したら、関数 'report' を呼び出してください。
+          5.4.の情報から労働時間を把握してください。
+            ・workStartTimeが8時30分～10時00分の場合は、workStartTimeから6時間後に1時間の休憩をしたとみなします。
+            この1時間は労働時間から控除してください。
+
+          6.休憩時間（breakTimeEndとbreakTimeStart）は以下の条件を満たしてください。
+            ・5.で計算した労働時間を提示してください。連続時間がわかるように明示してください。
+            ・5.で計算した休憩時間がある場合は1回目の休憩にカウントしてください。
+            ・1回目の休憩終了時間から計算して、勤務時間が連続6時間あれば、6時間ごとに1時間が必ず必要です。
+              今回何時間の休憩が必要かをステップバイステップで説明してください。
+            ・複数回の休憩が必要な場合もあります。
+            ・連続勤務時間が6時間未満の場合は不要です。労働時間を提示してください。
+            
+            6-1.breakTimeStart:24時間表記で。HHMM形式でも許可。不要な場合もある。
+            6-2.breakTimeEnd:24時間表記で。HHMM形式でも許可。不要な場合もある。
+
+          ステップバイステップで考えてください。
+          上記6つの情報をすべて取得したら、関数 'report' を呼び出してください。
 
     update: :reducer
 
@@ -78,7 +105,7 @@ nodes:
                   description: 勤務者の名前
                 date:
                   type: string
-                  description: 勤務日
+                  description: 勤務日(yyyy/mm/dd)
                 # weekday:
                 #   type: string
                 #   description: 勤務日の曜日
@@ -88,6 +115,12 @@ nodes:
                 workEndTime:
                   type: string
                   description: 退社時間（hh:mm）
+                breakTimeStart:
+                  type: string
+                  description: 休憩開始時間（hh:mm）※複数回ある場合もあります
+                breakTimeEnd:
+                  type: string
+                  description: 休憩終了時間（hh:mm）※複数回ある場合もあります
                 # workTotalTime:
                 #   type: string
                 #   description: 退社時間から出社時間を減算した勤務時間
@@ -95,11 +128,13 @@ nodes:
                 #   type: string
                 #   description: 休憩時間          
               required:
-                - name
+                - userName
                 - date
                 # - weekday
                 - workStartTime
                 - workEndTime
+                - breakTimeStart
+                - breakTimeEnd
                 # - workTotalTime
                 # - workRestTime
     inputs:
@@ -120,10 +155,9 @@ nodes:
       model: gpt-4o
       system: >
         "入力データをもとに、以下を追加して。
-          1.weekdayを追加
-          2.休憩時間を追加（労働時間が6時間以上の場合は1時間必要）
-          3.深夜時間を追加（22時～05時の間は深夜時間）
-          4.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）
+          1.weekdayをdateの直後に追加
+          2.深夜時間を追加（22時～05時の間は深夜時間）
+          3.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）
           ■.最後に出力はjson形式にして。
         "
     inputs:
