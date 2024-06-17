@@ -96,9 +96,7 @@ nodes:
     agent: groqAgent
     params:
       model: Llama3-70b-8192
-      query: >
-        "全文を日本語に翻訳して。余計なことは言わずに、翻訳した文章だけ答えて。
-        あまり難しい単語は使わずに。
+      query: "全文を日本語に翻訳して。余計なことは言わずに、翻訳した文章だけ答えて。あまり難しい単語は使わずに。"
     inputs:
       - :prompt
   OneShotQuery:
@@ -123,7 +121,7 @@ nodes:
   AllResult_output:
     agent: stringTemplateAgent
     params:
-      template: "\e[32m回答\e[0m: \n \e[32m■ Wikipedia\e[0m: ${0} \n\n\e[32m★ GPT-4go\e[0m:${1}"
+      template: "\e[32m回答\e[0m: \n \e[32m■ Wikipedia(Llama3-70b-8192)\e[0m: ${0} \n\n\e[32m★ GPT-4go\e[0m:${1}"
     console:
       after: true
     inputs:

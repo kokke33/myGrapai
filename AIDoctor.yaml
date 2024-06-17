@@ -32,7 +32,7 @@ nodes:
           3.sex: 性別（名前から推測してはいけません）
 
           4.symptom: 問診のスペシャリスト医師として、3つ程度の厳選した質問を出して
-            症状を把握してください。
+            症状を把握してください。１つ１つ回答させ、次の質問は前の質問をもとに作成してください。
           
           上記4つの情報をすべて取得したら、関数 'report' を呼び出してください。
 
@@ -86,7 +86,7 @@ nodes:
                     - 女
                 symptom:
                   type: string
-                  description: 患者の症状
+                  description: 患者の症状。
 
               required:
                 - name
@@ -110,9 +110,12 @@ nodes:
     params:
       model: gpt-4o
       system: >
-        "入力データをもとに、以下を追加して。
+        "
+        ■入力データをもとに、以下を追加して。
           1.年齢を追加（誕生日から計算して）
           2.応急処置を追加（症状に対する応急処置を具体的に）
+        ■「symptom」については医師に報告する用に文章を推敲して。
+        ■最後に出力はjson形式にして。
         "
     inputs:
       - :llm.choices.$0.message.tool_calls.$0.function.arguments
