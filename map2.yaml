@@ -17,3 +17,28 @@ nodes:
     agent: "bypassAgent"
     inputs: [":nestedNode.node1"]
     isResult: true
+  result2:
+    agent: "bypassAgent"
+    inputs: [":nestedNode.node1"]
+    isResult: true
+  nestedNode2:
+    agent: "mapAgent"
+    inputs: [":result2"]
+    graph:
+      version: 0.3
+      nodes:
+        node1:
+          agent: "stringTemplateAgent"
+          params:
+            template: "\e[32mstringTemplateAgent出力\e[0m: ${0}"
+          console:
+            after: true
+          inputs: 
+            - [:$0]
+          isResult: true
+  result3:
+    agent: "bypassAgent"
+    inputs: 
+      - :nestedNode2.node1
+    isResult: true          
+
