@@ -1,3 +1,4 @@
+
 version: 0.3
 nodes:
   #変数定義 
@@ -43,7 +44,7 @@ nodes:
           params:
             template: > 
               ${0}の色は？
-              余計なことは言わず、色の結果だけを日本語で回答して。
+              余計なことは言わず、色だけを日本語で回答して。
           inputs: [:$0]
         llm:
           agent: groqAgent
@@ -83,8 +84,7 @@ nodes:
           agent: stringTemplateAgent
           params:
             template: > 
-                ${0}色をしている他のフルーツは？
-                余計なことは言わずに、回答だけを日本語で２０字以内で回答して。
+                ${0} 色をしている他の果物は？回答だけを日本語で２０字以内で回答して。
           inputs: [:$0]
         llm:
           agent: groqAgent
@@ -104,43 +104,40 @@ nodes:
 
   # その結果を受けて、別のmapエージェントにインプット
   nestedNode3:
-    agent: "nestedAgent"
-    inputs: 
-      - :nestedNode2.result_llm
-    graph:
-      version: 0.3
-      loop:
-        while: :fruits
-      nodes:
-        fruits:
-          value: [banana,apple]
-          update: :shift.array
-          isResult: true  
-        result:
-          value: []
-          update: :reducer
-          isResult: true
-        shift:
-          agent: shiftAgent
-          inputs: [:fruits]
-        prompt:
-          agent: stringTemplateAgent
-          params:
-            template: ${0} についてどうおもう？日本語で20字回答して。
-          inputs: [:shift.item]
-        llm:
-          agent: groqAgent
-          params:
-            model: Llama3-70b-8192
-          inputs: [:prompt]
-        reducer:
-          agent: pushAgent
-          inputs:
-            - :result
-            - :llm.choices.$0.message.content
+      agent: "mapAgent"
+      inputs: [:nestedNode2.result_llm]
+      graph:
+        version: 0.3
+        nodes:
+          # stringTemplateAgent_node:
+          #   agent: "stringTemplateAgent"
+          #   params:
+          #     template: "\e[32mstringTemplateAgent出力\e[0m: ${0}"
+          #   # contoleは必須
+          #   console:
+          #     after: true
+          #   # stringTemplateAgentのinputsは改行できない
+          #   inputs: [:$0] 
+          #   isResult: true
+          # LLM
+          prompt:
+            agent: stringTemplateAgent
+            params:
+              template: > 
+                  ${0}についてどうおもう？日本語で２０字以内で回答して。
+            inputs: [:$0]
+          llm:
+            agent: groqAgent
+            params:
+              model: Llama3-70b-8192
+            inputs: [:prompt]
+          result_llm:
+            agent: copyAgent
+            inputs: [:llm.choices.$0.message.content]
+            isResult: true
 
   # ネストノード３の結果をインプットにした処理
   nestedNode3_result:
     agent: "bypassAgent"
-    inputs: [":nestedNode3.result"]
+    inputs: [":nestedNode3.result_llm"]
     isResult: true    
