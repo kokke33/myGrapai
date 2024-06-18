@@ -23,7 +23,7 @@ nodes:
       - :userInput2
 
   # 最初のネストノード
-  nestedNode:
+  nestedNode1:
     # nestedAgent ：結果は XX,YY といった感じ。文字,つながり
     # mapAgent ：結果は [XX,YY] といった感じ配列型。
     # agent: "nestedAgent"
@@ -56,16 +56,15 @@ nodes:
           isResult: true
 
   # 最初のネストノードの結果をインプットにした処理
-  nestedNode_result:
+  nestedNode1_result:
     agent: "bypassAgent"
-    inputs: [":nestedNode.result_llm"]
+    inputs: [":nestedNode1.result_llm"]
     isResult: true
 
   # その結果を受けて、別のmapエージェントにインプット
   nestedNode2:
     agent: "mapAgent"
-    inputs: 
-      - ":nestedNode.result_llm"
+    inputs: [:nestedNode1.result_llm]
     graph:
       version: 0.3
       nodes:
@@ -96,9 +95,52 @@ nodes:
           agent: copyAgent
           inputs: [:llm.choices.$0.message.content]
           isResult: true
+
   # ネストノード２の結果をインプットにした処理
-  result3:
+  nestedNode2_result:
     agent: "bypassAgent"
     inputs: [":nestedNode2.result_llm"]
     isResult: true          
 
+  # その結果を受けて、別のmapエージェントにインプット
+  nestedNode3:
+    agent: "nestedAgent"
+    inputs: 
+      - :nestedNode2.result_llm
+    graph:
+      version: 0.3
+      loop:
+        while: :fruits
+      nodes:
+        fruits:
+          value: [banana,apple]
+          update: :shift.array
+          isResult: true  
+        result:
+          value: []
+          update: :reducer
+          isResult: true
+        shift:
+          agent: shiftAgent
+          inputs: [:fruits]
+        prompt:
+          agent: stringTemplateAgent
+          params:
+            template: ${0} についてどうおもう？日本語で20字回答して。
+          inputs: [:shift.item]
+        llm:
+          agent: groqAgent
+          params:
+            model: Llama3-70b-8192
+          inputs: [:prompt]
+        reducer:
+          agent: pushAgent
+          inputs:
+            - :result
+            - :llm.choices.$0.message.content
+
+  # ネストノード３の結果をインプットにした処理
+  nestedNode3_result:
+    agent: "bypassAgent"
+    inputs: [":nestedNode3.result"]
+    isResult: true    
