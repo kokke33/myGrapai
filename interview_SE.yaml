@@ -124,30 +124,5 @@ nodes:
       - :chat.swappedMessages.$0.content
     isResult: true
 
-        # summary:
-        #   agent: stringTemplateAgent
-        #   inputs: 
-        #     - :reducer.$6.content
-        #   params:
-        #     template: |
-        #       次のビジネスアイデアを評価してください.
-        #       ${0}
-
-  # map:  
-  #   # Processes each entry concurrently.
-  #   agent: mapAgent  
-  #   inputs: [:swappedMessages]
-  #   params:
-  #     # to avoid rate limit
-  #     limit: 4  
-  #   isResult: true
-  #   graph:
-  #     nodes:
-  #       TESTTEST:
-  #         # Extracts title and content, then generate a single text
-  #         agent: stringTemplateAgent  
-  #         params:
-  #           template: ★:${0} ${1}
-  #         inputs: [:$0.role,:$0.content]
 
 

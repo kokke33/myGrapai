@@ -1,0 +1,54 @@
+version: 0.3
+nodes:
+  # url:
+  #   value: "https://www.tss.co.jp/Default.aspx"  # Holds the RSS feed URL
+  # rssFeed:
+  #   # Fetchs the RSS feed from the specified feed
+  #   agent: fetchAgent 
+  #   params:
+  #     type: text
+  #   inputs:
+  #       - :url
+
+
+  # url:
+  #   value: "https://www.google.com/search?q=hello"
+  # fetch:
+  #   agent: "fetchAgent"
+  #   params:
+  #     type: "text"
+  #   inputs: 
+  #     - ":url"
+  # success:
+  #   agent: "copyAgent"
+  #   isResult: true
+  #   unless: ":fetch.onError"
+  #   inputs: [true]
+  # error:
+  #   agent: "copyAgent"
+  #   isResult: true
+  #   if: ":fetch.onError"
+  #   inputs: [":fetch.onError"]
+
+
+  url:
+    value: "https://www.google.com/search?q=hello"
+  fetch:
+    agent: "fetchAgent"
+    params:
+      type: "text"
+    inputs: 
+      - ":url"
+      # body: "Posting data"
+  success:
+    agent: "copyAgent"
+    isResult: true
+    unless: ":fetch.onError"
+    inputs: [true]
+  error:
+    agent: "propertyFilterAgent"
+    params:
+      include: ["message", "status"]
+    isResult: true
+    if: ":fetch.onError"
+    inputs: [":fetch.onError"]

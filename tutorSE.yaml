@@ -3,7 +3,7 @@ nodes:
   word:
     agent: textInputAgent
     params:
-      message: "勉強したい単語を入力してください:"
+      message: "勉強したいシステム用語を入力してください:"
 
 # 意味
   meaning_jp_llm:
