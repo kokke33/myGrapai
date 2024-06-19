@@ -1,0 +1,45 @@
+version: 0.3
+# loop:
+#   while: :people
+nodes:
+  slashGPTAgent:
+    agent: "slashGPTAgent"
+    isResult : ture
+    params:
+      function_result: true
+      query: "世界で協力してco2を減らす方法を教えて下さい"
+      manifest:
+        prompt: >
+          "あなたは世界経済の専門家です。
+          ユーザの問い合わせについて考え、2個の結果をfunctionsの結果に返してください。"
+        skip_function_result: true
+        actions:
+          your_ideas:
+            type: "message_template"
+            message: "dummy"
+        functions:
+          - name: "your_ideas"
+            description: "Your answer to a user's inquiry"
+            parameters:
+              type: "object"
+              properties:
+                methods:
+                  type: "array"
+                  items:
+                    type: "object"
+                    properties:
+                      title:
+                        type: "string"
+                        description: "title"
+                      description:
+                        type: "string"
+                        description: "description"
+                    required:
+                      - "title"
+                      - "description"
+
+  nestedNode3_result:
+    agent: "copyAgent"
+    inputs: 
+      - :slashGPTAgent.$2.function_data.methods
+    isResult: true
