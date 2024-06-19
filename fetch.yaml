@@ -44,7 +44,7 @@ nodes:
     agent: "copyAgent"
     isResult: true
     unless: ":fetch.onError"
-    inputs: [true]
+    inputs: [:fetch]
   error:
     agent: "propertyFilterAgent"
     params:
