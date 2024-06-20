@@ -189,7 +189,6 @@ nodes:
     inputs:
       - null
       - :messagesWithUserInput
-
         # "nodeId": "llmCall",
         # "state": "completed",
         # "agentId": "groqAgent",
@@ -330,7 +329,6 @@ nodes:
     console:
       after: true
     if: :llmCall.choices.$0.message.tool_calls.$0.function.arguments
-
       # {
       #   "nodeId": "jsonparser",
       #   "state": "completed",
@@ -361,7 +359,7 @@ nodes:
       #   "endTime": 1718862816342
       # }
 
-
+  #LLMの結果が取得できなかった場合  
   LLM_notFound:
     agent: stringTemplateAgent
     params:
@@ -372,7 +370,6 @@ nodes:
       - :llmCall.choices.$0.message.tool_calls.$0.function.arguments
       - :userInput
     unless: :llmCall.choices.$0.message.tool_calls.$0.function.arguments
-  
         # {
         # "nodeId": "LLM_notFound",
         # "state": "skipped",
