@@ -6,6 +6,7 @@ nodes:
   continue:
     value: true
     update: :llm.choices.$0.message.content
+    isResult: true
   # 最終結果の出力
   information:
     value: {}
@@ -105,6 +106,8 @@ nodes:
     if: :llm.choices.$0.message.tool_calls
 
   # 結果に対してLLMで情報追加
+  # ★★★「最後に本会話は終了させてください」が重要。そうしないと会話続けてしまってエラーとなる
+  # "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'.
   meaning_llm:
     agent: openAIAgent
     params:
@@ -115,7 +118,7 @@ nodes:
           1.年齢を追加（誕生日から計算して）
           2.応急処置を追加（症状に対する応急処置を具体的に）
         ■「symptom」については医師に報告する用に文章を推敲して。
-        ■最後に出力はjson形式にして。
+        ■最後に出力はjson形式にして本会話は終了させてください。
         "
     inputs:
       - :llm.choices.$0.message.tool_calls.$0.function.arguments
