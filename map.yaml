@@ -24,5 +24,10 @@ nodes:
           agent: copyAgent
           inputs: [:llm.choices.$0.message.content]
           isResult: true
-  # output:
-    
+          # console:
+          #   after: true
+  map_result:
+    agent: "bypassAgent"
+    inputs: [":map.result"]
+    isResult: true
+        
