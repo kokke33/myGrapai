@@ -1,0 +1,132 @@
+version: 0.3
+loop:
+  while: :continue
+nodes:
+  # 繰り返し定義
+  continue:
+    value: true
+    update: :llm.choices.$0.message.content
+
+  # 最終結果の出力
+  information:
+    value: {}
+    update: :argumentsParser
+    isResult: true
+
+  # メッセージ
+  messages:
+    value:
+      - role: system
+        content: >
+          以下4つの情報をユーザーから取得することがあなたの責任です。
+          １つずつステップバイステップで情報を取得してください。
+           1.workStartTime
+           2.workEndTime
+           3.breakTimeStart
+           4.breakTimeEnd
+          すべて取得したら関数reportを呼んでください。
+    update: :reducer
+
+  userInput:
+    agent: textInputAgent
+    params:
+      message: "あなた:"
+    # console:
+    #   before: 勤怠情報をまとめます。まずは名前を教えてください。
+
+  userMessage:
+    agent: propertyFilterAgent
+    params:
+      inject:
+        - propId: content
+          from: 1
+    inputs:
+      - role: user
+      - :userInput
+
+  appendedMessages:
+    agent: pushAgent
+    inputs:
+      - :messages
+      - :userMessage
+      
+# LLM
+  llm:
+    agent: groqAgent
+    # agent: openAIAgent
+    params:
+      model: Llama3-70b-8192
+      # model: gpt-4o
+      tools:
+        - type: function
+          function:
+            name: report
+            description: ユーザーから取得した情報を報告してください。
+            parameters:
+              type: object
+              properties:
+                workStartTime:
+                  type: string
+                  description: 出社時間（hh:mm）
+                workEndTime:
+                  type: string
+                  description: 退社時間（hh:mm）
+                breakTimeStart:
+                  type: string
+                  description: 休憩開始時間（hh:mm）※複数回ある場合もあります
+                breakTimeEnd:
+                  type: string
+                  description: 休憩終了時間（hh:mm）※複数回ある場合もあります
+              required:
+                - workStartTime
+                - workEndTime
+                - breakTimeStart
+                - breakTimeEnd
+    inputs:
+      - null
+      - :appendedMessages
+  
+  # Json形式に修正
+  argumentsParser:
+    # agent: jsonParserAgent
+    agent: copyAgent
+    inputs:
+      - :meaning_llm.choices.$0.message.content
+    if: :llm.choices.$0.message.tool_calls
+
+  # 結果に対してLLMで情報追加
+  meaning_llm:
+    # agent: openAIAgent
+    agent: groqAgent
+    params:
+      # model: gpt-4o
+      model: Llama3-70b-8192
+      system: >
+        "入力データをもとに、以下を追加して。
+          1.weekdayをdateの直後に追加
+          2.深夜時間を追加（22時～05時の間は深夜時間）
+          3.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）
+        ■最後に出力はjson形式にして本会話は終了させてください。"
+    inputs:
+      - :llm.choices.$0.message.tool_calls.$0.function.arguments
+    if: :llm.choices.$0.message.tool_calls
+  
+  # LLMの結果を返却
+  output:
+    agent: stringTemplateAgent
+    params:
+      template: "\e[32mAI\e[0m: ${0}"
+    console:
+      after: true
+    inputs:
+      - :llm.choices.$0.message.content
+    if: :llm.choices.$0.message.content
+
+  # LLMの結果を配列に入れる
+  reducer:
+    agent: pushAgent
+    inputs:
+      - :appendedMessages
+      - :llm.choices.$0.message
+
+

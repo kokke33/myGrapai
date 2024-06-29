@@ -157,10 +157,11 @@ nodes:
   # inputs中でfunctionを呼び出すと指示すれば、inputデータをもとにして
   # function定義通りの内容を出力するので便利
   llmCall:
-    # agent: openAIAgent
-    agent: groqAgent
+    agent: openAIAgent
+    # agent: groqAgent
     params:
-      model: Llama3-70b-8192
+      # model: Llama3-70b-8192
+      model: gpt-4o
       tools:
         - type: function
           function:
