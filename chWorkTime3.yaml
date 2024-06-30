@@ -134,12 +134,18 @@ nodes:
                 workEndTime:
                   type: string
                   description: 退社時間（hh:mm）
-                breakTimeStart:
+                breakTimeStart1:
                   type: string
-                  description: 休憩開始時間（hh:mm）※複数回ある場合もあります
-                breakTimeEnd:
+                  description: １回目の休憩開始時間（hh:mm）
+                breakTimeEnd1:
                   type: string
-                  description: 休憩終了時間（hh:mm）※複数回ある場合もあります
+                  description: １回目の休憩終了時間（hh:mm）
+                breakTimeStart2:
+                  type: string
+                  description: ２回目の休憩開始時間（hh:mm）
+                breakTimeEnd2:
+                  type: string
+                  description: ２回目の休憩終了時間（hh:mm）
                 # workTotalTime:
                 #   type: string
                 #   description: 退社時間から出社時間を減算した勤務時間
@@ -152,8 +158,10 @@ nodes:
                 # - weekday
                 - workStartTime
                 - workEndTime
-                - breakTimeStart
-                - breakTimeEnd
+                - breakTimeStart1
+                - breakTimeEnd1
+                - breakTimeStart2
+                - breakTimeEnd2
                 # - workTotalTime
                 # - workRestTime
     inputs:
@@ -179,6 +187,17 @@ nodes:
     inputs:
       - :llm.choices.$0.message.content
     if: :llm.choices.$0.message.content
+
+  # meaning_llmの結果を返却
+  output_meaning_llm:
+    agent: stringTemplateAgent
+    params:
+      template: "\e[32mReport\e[0m: ${0}"
+    console:
+      after: true
+    inputs:
+      - :meaning_llm.choices.$0.message.content
+    if: :meaning_llm.choices.$0.message.content
 
   # LLMの結果を配列に入れる
   reducer:
