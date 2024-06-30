@@ -1,0 +1,160 @@
+version: 0.3
+loop:
+  while: :continue
+nodes:
+  continue:
+    value: true
+    # update: :llm.choices.$0.message.content
+    update: :checkInput.continue
+  information:
+    value: {}
+    update: :argumentsParser
+    isResult: true
+  messages:
+    value:
+      - role: system
+        content: >
+          以下4つの情報をユーザーから取得することがあなたの責任です。
+          連続6時間以上の勤務にならないよう確認してください。
+
+          1.workStartTime
+          2.workEndTime
+          3.breakTimeStart
+          4.breakTimeEnd        
+
+          必ず１つ１つ確実に質問をしてください。一度に質問することはダメです。
+          1.workStartTime:
+            24時間表記で。HHMM形式でも許可。
+
+          2.workEndTime:
+            24時間表記で。HHMM形式でも許可。
+
+          3.労働時間を把握:
+            workEndTimeの情報から労働時間を把握してください。
+
+          4.休憩時間（breakTimeEndとbreakTimeStart）:
+            以下の条件を満たすように設定してください。
+            ・1時間単位とする。休憩時間は必ず「XX:00」のように分は00とすること。
+            ・workStartTimeが08時30分～10時00分の場合は、workStartTimeから6時間後に1回目の1時間の休憩をしたと
+              みなします。しかしこの場合は申請は不要です。
+            ・1回目の休憩終了時間から計算して、残りの勤務時間が連続6時間あれば、さらに6時間ごとに1時間休憩が必要です。
+              最終的に何時間の休憩が必要かをステップバイステップで説明してください。
+            ・退社時間と休憩終了時間と同じ場合は、休憩開始時間を早めることで同じにならないようにしてください。
+            ・1回目の休憩終了時間から計算して、残りの勤務時間が6時間未満の場合は休憩は不要です。
+            
+            4-1.breakTimeStart:24時間表記で。HHMM形式でも許可。不要な場合もある。
+            4-2.breakTimeEnd:24時間表記で。HHMM形式でも許可。不要な場合もある。
+
+          ステップバイステップで考えてください。
+          上記4つの情報をすべて取得したら、【出力サンプル】のレイアウトに沿って結果を表示し、
+          関数 'report' を呼び出してください。
+          その際、質問は一切しないで下さい。
+
+    update: :reducer
+  userInput:
+    agent: textInputAgent
+    params:
+      message: "You:"
+  userMessage:
+    agent: propertyFilterAgent
+    params:
+      inject:
+        - propId: content
+          from: 1
+    inputs:
+      - role: user
+      - :userInput
+  appendedMessages:
+    agent: pushAgent
+    inputs:
+      - :messages
+      - :userMessage
+  llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+      tools:
+        - type: function
+          function:
+            name: report
+            description: ユーザーから取得した情報を報告してください。
+            parameters:
+              type: object
+              properties:
+                # userName:
+                #   type: string
+                #   description: 勤務者の名前
+                # date:
+                #   type: string
+                #   description: 勤務日(yyyy/mm/dd)
+                # weekday:
+                #   type: string
+                #   description: 勤務日の曜日
+                workStartTime:
+                  type: string
+                  description: 出社時間（hh:mm）
+                workEndTime:
+                  type: string
+                  description: 退社時間（hh:mm）
+                breakTimeStart1:
+                  type: string
+                  description: １回目の休憩開始時間（hh:mm）
+                breakTimeEnd1:
+                  type: string
+                  description: １回目の休憩終了時間（hh:mm）
+                breakTimeStart2:
+                  type: string
+                  description: ２回目の休憩開始時間（hh:mm）
+                breakTimeEnd2:
+                  type: string
+                  description: ２回目の休憩終了時間（hh:mm）
+                # workTotalTime:
+                #   type: string
+                #   description: 退社時間から出社時間を減算した勤務時間
+                # workRestTime:
+                #   type: string
+                #   description: 休憩時間          
+              required:
+                # - userName
+                # - date
+                # - weekday
+                - workStartTime
+                - workEndTime
+                - breakTimeStart1
+                - breakTimeEnd1
+                - breakTimeStart2
+                - breakTimeEnd2
+                # - workTotalTime
+                # - workRestTime
+    inputs:
+      - null
+      - :appendedMessages
+  argumentsParser:
+    agent: jsonParserAgent
+    inputs:
+      - :llm.choices.$0.message.tool_calls.$0.function.arguments
+    if: :llm.choices.$0.message.tool_calls
+  output:
+    agent: stringTemplateAgent
+    params:
+      template: "\e[32mLlama3\e[0m: ${0}"
+    console:
+      after: true
+    inputs:
+      - :llm.choices.$0.message.content
+    if: :llm.choices.$0.message.content
+  reducer:
+    agent: pushAgent
+    inputs:
+      - :appendedMessages
+      - :llm.choices.$0.message
+  checkInput:
+    agent: propertyFilterAgent
+    params:
+      inspect:
+        - propId: continue
+          equal: "stop"
+    inputs:
+      - {}
+      - :llm.choices.$0.finish_reason
+      # - :userInput

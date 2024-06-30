@@ -47,9 +47,9 @@ nodes:
               余計なことは言わず、色だけを日本語で回答して。
           inputs: [:$0]
         llm:
-          agent: openAIAgent
+          agent: groqAgent
           params:
-            model: gpt-4o
+            model: Llama3-70b-8192
           inputs: [:prompt]
         result_llm:
           agent: copyAgent
@@ -87,9 +87,9 @@ nodes:
                 ${0} 色をしている他の果物は？回答だけを日本語で２０字以内で回答して。
           inputs: [:$0]
         llm:
-          agent: openAIAgent
+          agent: groqAgent
           params:
-            model: gpt-4o
+            model: Llama3-70b-8192
           inputs: [:prompt]
         result_llm:
           agent: copyAgent
@@ -127,9 +127,9 @@ nodes:
                   ${0}についてどうおもう？日本語で２０字以内で回答して。
             inputs: [:$0]
           llm:
-            agent: openAIAgent
+            agent: groqAgent
             params:
-              model: gpt-4o
+              model: Llama3-70b-8192
             inputs: [:prompt]
           result_llm:
             agent: copyAgent
