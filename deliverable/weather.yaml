@@ -1,0 +1,383 @@
+version: 0.3
+loop:
+  while: :continue
+nodes:
+  continue:
+    value: true
+    update: :checkInput.continue
+  messages:
+    value:
+      - role: system
+        content: >
+          You are a meteorologist. Use getWeather API, 
+          only when the user ask for
+          the weather information.
+    # update: :reducer
+    # isResult: true
+  userInput:
+    agent: textInputAgent
+    params:
+      message: "場所:"
+
+  # インプットのチェック
+  checkInput:
+    agent: propertyFilterAgent
+    params:
+      inspect:
+        - propId: continue
+          notEqual: /bye
+    inputs:
+      - {}
+      - :userInput
+        # "nodeId": "checkInput",
+        # "state": "completed",
+        # "agentId": "propertyFilterAgent",
+        # "params": {
+        #   "inspect": [
+        #     {
+        #       "propId": "continue",
+        #       "notEqual": "/bye"
+        #     }
+        #   ]
+        # },
+        # "isLoop": true,
+        # "repeatCount": 0,
+        # "startTime": 1718862814284,
+        # "inputs": [
+        #   "userInput"
+        # ],
+        # "inputsData": [
+        #   {},
+        #   "さいたま市"
+        # ],
+        # "result": {
+        #   "continue": true
+        # },
+        # "resultKeys": [
+        #   ":propertyFilterAgent",
+        #   ":propertyFilterAgent.continue"
+        # ],
+
+  userMessage:
+    agent: propertyFilterAgent
+    params:
+      inject:
+        - propId: content
+          from: 1
+    inputs:
+      - role: user
+      - :userInput
+      #"nodeId": "userMessage",
+      # "state": "completed",
+      # "agentId": "propertyFilterAgent",
+      # "params": {
+      #   "inject": [
+      #     {
+      #       "propId": "content",
+      #       "from": 1
+      #     }
+      #   ]
+      # },
+      # "isLoop": true,
+      # "repeatCount": 0,
+      # "startTime": 1718862814285,
+      # "inputs": [
+      #   "userInput"
+      # ],
+      # "inputsData": [
+      #   {
+      #     "role": "user"
+      #   },
+      #   "さいたま市"
+      # ],
+      # "result": {
+      #   "role": "user",
+      #   "content": "さいたま市"
+      # },
+      # "resultKeys": [
+      #   ":propertyFilterAgent",
+      #   ":propertyFilterAgent.role",
+      #   ":propertyFilterAgent.content"
+      # ],
+      # "endTime": 1718862814285
+
+  messagesWithUserInput:
+    agent: pushAgent
+    inputs:
+      - :messages
+      - :userMessage
+    if: :checkInput.continue
+
+      #   "nodeId": "messagesWithUserInput",
+      #   "state": "completed",
+      #   "agentId": "pushAgent",
+      #   "params": {},
+      #   "isLoop": true,
+      #   "repeatCount": 0,
+      #   "startTime": 1718862814285,
+      #   "inputs": [
+      #     "messages",
+      #     "userMessage"
+      #   ],
+      #   "inputsData": [
+      #     [
+      #       {
+      #         "role": "system",
+      #         "content": "You are a meteorologist. Use getWeather API,  only when the user ask for the weather information.\n"
+      #       }
+      #     ],
+      #     {
+      #       "role": "user",
+      #       "content": "さいたま市"
+      #     }
+      #   ],
+      #   "result": [
+      #     {
+      #       "role": "system",
+      #       "content": "You are a meteorologist. Use getWeather API,  only when the user ask for the weather information.\n"
+      #     },
+      #     {
+      #       "role": "user",
+      #       "content": "さいたま市"
+      #     }
+      #   ],
+      #   "resultKeys": [
+      #     ":pushAgent",
+      #     ":pushAgent.$0",
+      #     ":pushAgent.$0.role",
+      #     ":pushAgent.$0.content",
+      #     ":pushAgent.$1",
+      #     ":pushAgent.$1.role",
+      #     ":pushAgent.$1.content"
+      #   ],
+      #   "endTime": 1718862814285
+
+
+  # LLMを呼び出す際にfunctionを使う方法。functionを定義。
+  # inputs中でfunctionを呼び出すと指示すれば、inputデータをもとにして
+  # function定義通りの内容を出力するので便利
+  llmCall:
+    agent: openAIAgent
+    # agent: groqAgent
+    params:
+      model: gpt-4o
+      # model: Llama3-70b-8192
+      tools:
+        - type: function
+          function:
+            name: getWeather
+            description: get wether information of the specified location
+            parameters:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                  description: The latitude of the location.
+                longitude:
+                  type: number
+                  description: The longitude of the location.
+                cityname:
+                  type: string
+                  description: The name of the location.
+                mayor:
+                  type: string
+                  description: The mayor name of the location.
+              required:
+                - latitude
+                - longitude
+                - cityname
+                - mayor
+    inputs:
+      - null
+      - :messagesWithUserInput
+        # "nodeId": "llmCall",
+        # "state": "completed",
+        # "agentId": "groqAgent",
+        # "params": {
+        #   "model": "Llama3-70b-8192",
+        #   "tools": [
+        #     {
+        #       "type": "function",
+        #       "function": {
+        #         "name": "getWeather",
+        #         "description": "get wether information of the specified location",
+        #         "parameters": {
+        #           "type": "object",
+        #           "properties": {
+        #             "latitude": {
+        #               "type": "number",
+        #               "description": "The latitude of the location."
+        #             },
+        #             "longitude": {
+        #               "type": "number",
+        #               "description": "The longitude of the location."
+        #             },
+        #             "cityname": {
+        #               "type": "string",
+        #               "description": "The name of the location."
+        #             },
+        #             "mayor": {
+        #               "type": "string",
+        #               "description": "The mayor name of the location."
+        #             }
+        #           },
+        #           "required": [
+        #             "latitude",
+        #             "longitude",
+        #             "cityname",
+        #             "mayor"
+        #           ]
+        #         }
+        #       }
+        #     }
+        #   ]
+        # },
+        # "isLoop": true,
+        # "repeatCount": 0,
+        # "startTime": 1718862814285,
+        # "inputs": [
+        #   "messagesWithUserInput"
+        # ],
+        # "inputsData": [
+        #   null,
+        #   [
+        #     {
+        #       "role": "system",
+        #       "content": "You are a meteorologist. Use getWeather API,  only when the user ask for the weather information.\n"
+        #     },
+        #     {
+        #       "role": "user",
+        #       "content": "さいたま市"
+        #     }
+        #   ]
+        # ],
+        # "result": {
+        #   "id": "chatcmpl-e27aa376-dc93-4844-be5e-f79cf9508826",
+        #   "object": "chat.completion",
+        #   "created": 1718862817,
+        #   "model": "llama3-70b-8192",
+        #   "choices": [
+        #     {
+        #       "index": 0,
+        #       "message": {
+        #         "role": "assistant",
+        #         "tool_calls": [
+        #           {
+        #             "id": "call_927n",
+        #             "type": "function",
+        #             "function": {
+        #               "name": "getWeather",
+        #               "arguments": "{\"cityname\":\"さいたま市\",\"latitude\":35.8983,\"longitude\":139.6457,\"mayor\":\"Hayato Shimizu\"}"
+        #             }
+        #           }
+        #         ]
+        #       },
+        #       "logprobs": null,
+        #       "finish_reason": "tool_calls"
+        #     }
+        #   ],
+        #   "usage": {
+        #     "prompt_tokens": 1042,
+        #     "prompt_time": 0.342165353,
+        #     "completion_tokens": 74,
+        #     "completion_time": 0.208598614,
+        #     "total_tokens": 1116,
+        #     "total_time": 0.550763967
+        #   },
+        #   "system_fingerprint": "fp_abd29e8833",
+        #   "x_groq": {
+        #     "id": "req_01j0t3a90me0f85q5dq0zgf64y"
+        #   }
+        # },
+        # "resultKeys": [
+        #   ":groqAgent",
+        #   ":groqAgent.id",
+        #   ":groqAgent.object",
+        #   ":groqAgent.created",
+        #   ":groqAgent.model",
+        #   ":groqAgent.choices",
+        #   ":groqAgent.choices.$0",
+        #   ":groqAgent.choices.$0.index",
+        #   ":groqAgent.choices.$0.message",
+        #   ":groqAgent.choices.$0.message.role",
+        #   ":groqAgent.choices.$0.message.tool_calls",
+        #   ":groqAgent.choices.$0.message.tool_calls.$0",
+        #   ":groqAgent.choices.$0.message.tool_calls.$0.id",
+        #   ":groqAgent.choices.$0.message.tool_calls.$0.type",
+        #   ":groqAgent.choices.$0.message.tool_calls.$0.function",
+        #   ":groqAgent.choices.$0.message.tool_calls.$0.function.name",
+        #   ":groqAgent.choices.$0.message.tool_calls.$0.function.arguments",
+        #   ":groqAgent.choices.$0.logprobs",
+        #   ":groqAgent.choices.$0.finish_reason",
+        #   ":groqAgent.usage",
+        #   ":groqAgent.usage.prompt_tokens",
+        #   ":groqAgent.usage.prompt_time",
+        #   ":groqAgent.usage.completion_tokens",
+        #   ":groqAgent.usage.completion_time",
+        #   ":groqAgent.usage.total_tokens",
+        #   ":groqAgent.usage.total_time",
+        #   ":groqAgent.system_fingerprint",
+        #   ":groqAgent.x_groq",
+        #   ":groqAgent.x_groq.id"
+        # ],
+        # "endTime": 1718862816341
+
+  jsonparser:
+    agent: jsonParserAgent
+    inputs:
+      - :llmCall.choices.$0.message.tool_calls.$0.function.arguments
+    isResult: true
+    console:
+      after: true
+    if: :llmCall.choices.$0.message.tool_calls.$0.function.arguments
+      # {
+      #   "nodeId": "jsonparser",
+      #   "state": "completed",
+      #   "agentId": "jsonParserAgent",
+      #   "params": {},
+      #   "isLoop": true,
+      #   "repeatCount": 0,
+      #   "startTime": 1718862816341,
+      #   "inputs": [
+      #     "llmCall"
+      #   ],
+      #   "inputsData": [
+      #     "{\"cityname\":\"さいたま市\",\"latitude\":35.8983,\"longitude\":139.6457,\"mayor\":\"Hayato Shimizu\"}"
+      #   ],
+      #   "result": {
+      #     "cityname": "さいたま市",
+      #     "latitude": 35.8983,
+      #     "longitude": 139.6457,
+      #     "mayor": "Hayato Shimizu"
+      #   },
+      #   "resultKeys": [
+      #     ":jsonParserAgent",
+      #     ":jsonParserAgent.cityname",
+      #     ":jsonParserAgent.latitude",
+      #     ":jsonParserAgent.longitude",
+      #     ":jsonParserAgent.mayor"
+      #   ],
+      #   "endTime": 1718862816342
+      # }
+
+  #LLMの結果が取得できなかった場合  
+  LLM_notFound:
+    agent: stringTemplateAgent
+    params:
+      template: "${1} は見つかりません（笑）。他の都市を入力して。"
+    console:
+      after: true
+    inputs:
+      - :llmCall.choices.$0.message.tool_calls.$0.function.arguments
+      - :userInput
+    unless: :llmCall.choices.$0.message.tool_calls.$0.function.arguments
+        # {
+        # "nodeId": "LLM_notFound",
+        # "state": "skipped",
+        # "agentId": "stringTemplateAgent",
+        # "params": {
+        #   "template": "${1} は見つかりません（笑）。他の都市を入力して。"
+        # },
+        # "isLoop": true,
+        # "repeatCount": 0
+        # },

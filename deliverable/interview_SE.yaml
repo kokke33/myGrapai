@@ -1,0 +1,128 @@
+version: 0.3
+nodes:
+  name:
+    agent: textInputAgent
+    params:
+      message: "悩める社員:"
+    console:
+      before: "悩んでいること、相談したいことを教えてください"      
+
+  context:
+    agent: stringTemplateAgent
+    params:
+      template:
+        person0:
+          name: プロジェクトマネージャ
+          system: >
+            あなたはベテランのプロジェクトマネージャです。
+            相談者の悩みを聞き、導くのがあなたの仕事です。
+            観客を引き付けるために、一つ一つ質問を投げかけ、
+            次の話題に移る前に回答に対して反応してください。
+            回答は、100字以内で、日本語で回答してください。
+        person1:
+          name: 相談者
+          system: >
+            あなたは仕事に悩んでいるシステムエンジニアです。
+            100文字以内で回答して。
+          greeting: 私は ${0} について相談したい。
+    inputs:
+      - :name
+
+  # messageの定義
+  messages:
+    agent: propertyFilterAgent
+    params:
+      inject:
+        - index: 0
+          propId: content
+          from: 1
+        - index: 1
+          propId: content
+          from: 2
+    inputs:
+      - - role: system
+        - role: user
+      - :context.person0.system
+      - :context.person1.greeting
+
+  #チャット本体
+  chat:
+    agent: nestedAgent
+    # nestedAgentのインプットは２つあって、揃ってないと動かない
+    inputs:
+      - :messages
+      - :context
+    params:
+      namedInputs:
+        - messages
+        - context
+    # isResult: true
+    
+    # 入れ子の処理
+    graph:
+      loop:
+        count: 10
+      nodes:
+        messages:
+          value: []
+          update: :swappedMessages
+        context:
+          value: {}
+          update: :swappedContext
+        llm:
+          # agent: openAIAgent
+          # params:
+          #   model: gpt-4o
+          agent: groqAgent
+          params:
+            model: Llama3-70b-8192
+          inputs:
+            - null
+            - :messages
+        output:
+          agent: stringTemplateAgent
+          params:
+            template: "\e[32m${1}:\e[0m ${0}\n"
+          console:
+            after: true
+          inputs:
+            - :llm.choices.$0.message.content
+            - :context.person0.name
+
+        reducer:
+          agent: pushAgent
+          inputs:
+            - :messages
+            - :llm.choices.$0.message
+
+        swappedContext:
+          agent: propertyFilterAgent
+          params:
+            swap:
+              person0: person1
+          inputs:
+            - :context
+    
+        swappedMessages:
+          agent: propertyFilterAgent
+          params:
+            inject:
+              - propId: content
+                index: 0
+                from: 1
+            alter:
+              role:
+                assistant: user
+                user: assistant
+          inputs:
+            - :reducer
+            - :swappedContext.person0.system  
+
+  outputTest:
+    agent: copyAgent
+    inputs:
+      - :chat.swappedMessages.$0.content
+    isResult: true
+
+
+
