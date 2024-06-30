@@ -3,9 +3,13 @@ loop:
   while: :continue
 nodes:
   # 繰り返し定義
+  # continue:
+  #   value: true
+  #   update: :llm.choices.$0.message.content
   continue:
     value: true
-    update: :llm.choices.$0.message.content
+    # update: :llm.choices.$0.message.content
+    update: :checkInput.continue
 
   # 最終結果の出力
   information:
@@ -158,26 +162,13 @@ nodes:
   
   # Json形式に修正
   argumentsParser:
-    # agent: jsonParserAgent
-    agent: copyAgent
+    agent: jsonParserAgent
+    # agent: copyAgent
     inputs:
       - :meaning_llm.choices.$0.message.content
-    if: :llm.choices.$0.message.tool_calls
+    # if: :llm.choices.$0.message.tool_calls
+    if: :meaning_llm.choices.$0.message.content
 
-  # 結果に対してLLMで情報追加
-  meaning_llm:
-    agent: openAIAgent
-    params:
-      model: gpt-4o
-      system: >
-        "入力データをもとに、以下を追加して。
-          1.weekdayをdateの直後に追加
-          2.深夜時間を追加（22時～05時の間は深夜時間）
-          3.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）"
-    inputs:
-      - :llm.choices.$0.message.tool_calls.$0.function.arguments
-    if: :llm.choices.$0.message.tool_calls
-  
   # LLMの結果を返却
   output:
     agent: stringTemplateAgent
@@ -196,4 +187,33 @@ nodes:
       - :appendedMessages
       - :llm.choices.$0.message
 
+  # 結果に対してLLMで情報追加
+  meaning_llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+      system: >
+        "入力データをもとに、以下を追加して。
+          1.深夜時間を追加（22時～05時の間は深夜時間）
+          2.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）
+        "
+    inputs:
+      - :llm.choices.$0.message.tool_calls.$0.function.arguments
+    if: :llm.choices.$0.message.tool_calls
+  
+  # meaning_llmの結果がある場合はループを抜けるためにFalseを返す 
+  LastAnsewerFlg:
+    agent: copyAgent
+    inputs:
+      - :meaning_llm.choices.$0.message.content
+    if: :meaning_llm.choices.$0.message.content
 
+  checkInput:
+    agent: propertyFilterAgent
+    params:
+      inspect:
+        - propId: continue
+          notEqual: :LastAnsewerFlg
+    inputs:
+      - {}
+      - :userInput
