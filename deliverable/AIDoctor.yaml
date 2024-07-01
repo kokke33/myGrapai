@@ -4,7 +4,7 @@ nodes:
   First_prompt:
     agent: stringTemplateAgent
     params:
-      template: "\e[32mAI\e[0m: あなたの名前を教えてください"
+      template: "\e[32mAI\e[0m: あなたの名前をカタカナ、またはローマ字で教えてください"
     console:
       after: true
   
@@ -21,7 +21,7 @@ nodes:
           value: true
           # update: :llm.choices.$0.message.content
           update: :loopCheck.continue
-        # 最終結果の出力
+        # 最終結果の出力（nestedNode1の結果出力なのでisResult: true）
         information:
           value: {}
           update: :argumentsParser
@@ -34,11 +34,10 @@ nodes:
                 以下の情報をユーザーから取得することがあなたの責任です。
                 １つ１つ確実に質問をしてください。
                 
-                1.name: 以下の条件を満たしてください。。
+                1.name: 以下の条件を満たしてください。
                 ・姓と名の両方をかならず確認すること。
-                ・ひらがなの場合は漢字が必要である事を伝えて漢字の情報を聞き直してください。
-                ・一度聞き直したのちは、漢字以外でもよいです。
-                ・漢字以外がある場合は、念のため聞き直してください。
+                  ・カタカナ、またはローマ字であること。
+                  ・入力された文字がひらがなの場合はカタカナに変換してください。
                 ・絶対に勝手に漢字を勝手に推測してはいけません。
 
                 2.birthday: 年を含める必要があります。
@@ -138,10 +137,10 @@ nodes:
           params:
             model: gpt-4o
             system: >
-              ■入力データをもとに、以下を追加して。
+              ■入力データをもとに、以下を追加し、結果だけを返して。
                 1.年齢を追加（誕生日から計算して）
                 2.応急処置を追加（症状に対する応急処置を具体的に）
-              ■「symptom」については医師に報告する用に文章を推敲して。
+              ■「symptom」については医師に報告する用に文章を推敲しなおして。
               ■最後に出力はjson形式にして本会話は終了させてください。
           inputs:
             - :llm.choices.$0.message.tool_calls.$0.function.arguments
