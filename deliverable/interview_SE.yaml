@@ -61,7 +61,7 @@ nodes:
     # 入れ子の処理
     graph:
       loop:
-        # 会話のループ回数
+        # ループ回数
         count: 10
       nodes:
         messages:
