@@ -4,7 +4,7 @@ nodes:
   First_prompt:
     agent: stringTemplateAgent
     params:
-      template: "\e[32mAI\e[0m: あなたの名前をカタカナ、またはローマ字で教えてください"
+      template: "\e[32mAI\e[0m: あなたの名前をカタカナ、またはローマ字で教えてください!"
     console:
       after: true
   
