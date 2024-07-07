@@ -2,7 +2,7 @@ version: 0.3
 loop:
   while: :continue
 nodes:
-  # 繰り返し定義
+  # 繰り返し定義.
   continue:
     value: true
     update: :llm.choices.$0.message.content
