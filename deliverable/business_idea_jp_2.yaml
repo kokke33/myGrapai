@@ -28,6 +28,8 @@ nodes:
         ${0}
   node3:
     agent: openAIAgent
+    params:
+      model: gpt-4o
     inputs:
       - :node2
     # isResult: true
@@ -43,6 +45,8 @@ nodes:
         ${1}
   node5:
     agent: openAIAgent
+    params:
+      model: gpt-4o
     inputs:
       - :node4
   output:
