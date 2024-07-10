@@ -11,7 +11,7 @@ nodes:
     params:
       message: "悩める社員:"  
     console:
-      before: "悩んでいること、相談したいことを教えてください"
+      before: "\e[1;32m■悩んでいること、相談したいことを教えてください:\e[0m"
 
   checkInput:
     agent: propertyFilterAgent
@@ -110,7 +110,7 @@ nodes:
         output:
           agent: stringTemplateAgent
           params:
-            template: "\e[32m${1}:\e[0m ${0}\n"
+            template: "\e[34m>${1}:\e[0m ${0}\n"
           console:
             after: true
           inputs:
@@ -173,7 +173,7 @@ nodes:
           agent: "stringTemplateAgent"
           params:
             template: > 
-              以下を日本語で要約してください。
+              以下を日本語で要約してください。200文字で。
               結果だけを回答すること。
               "${0}"
           # contoleは必須
@@ -193,7 +193,7 @@ nodes:
         summarize:
           agent: "stringTemplateAgent"
           params:
-            template: "\e[32mまとめ:\e[0m ${0}\n"
+            template: "\e[31mまとめ:\e[0m ${0}\n"
           inputs: [:result_llm]
           # contoleは必須
           console:
