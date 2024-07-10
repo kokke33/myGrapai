@@ -12,6 +12,7 @@ nodes:
       message: "トピック:"  
     console:
       before: "何について知りたいですか？"
+      
   checkInput:
     agent: propertyFilterAgent
     params:
