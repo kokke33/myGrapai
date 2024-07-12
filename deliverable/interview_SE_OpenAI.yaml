@@ -39,7 +39,7 @@ nodes:
             相談者を引き付けるために、一つ一つ質問を投げかけ、
             次の話題に移る前に、相談者の回答に対して反応してください。
             回答は以下3点注意してください。
-            1.100字以内で、会話の文章として日本語で回答すること
+            1.200字以内で、会話の文章として日本語で回答すること
             2.マークダウン形式は使わないこと。
             3.回答の中に改行は入れないこと。
             
@@ -96,12 +96,12 @@ nodes:
           value: {}
           update: :swappedContext
         llm:
-          # agent: openAIAgent
-          # params:
-          #   model: gpt-4o
-          agent: groqAgent
+          agent: openAIAgent
           params:
-            model: Llama3-70b-8192
+            model: gpt-4o
+          # agent: groqAgent
+          # params:
+          #   model: Llama3-70b-8192
           inputs:
             - null
             - :messages
@@ -180,9 +180,12 @@ nodes:
           # stringTemplateAgentのinputsは改行できない
           inputs: [:$0]
         llm:
-          agent: groqAgent
-          params:
-            model: Llama3-70b-8192
+        agent: openAIAgent
+        params:
+          model: gpt-4o        
+          # agent: groqAgent
+          # params:
+          #   model: Llama3-70b-8192
           inputs: [:prompt]
         result_llm:
           agent: copyAgent
