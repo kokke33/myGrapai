@@ -25,6 +25,20 @@ nodes:
     inputs:
       - {}
       - :userInput     
+  # 会話まとめ
+  matome:
+    value: []
+    update: :matomeMessages
+  matomeMessages:
+    agent: stringTemplateAgent
+    params:
+      template: "\e[34m会話まとめ:\e[0m ${0}\n"
+    # 画面出力しないためにコメントアウト
+    # console:
+    #   after: true
+    inputs: [":nestedNode2.result_llm"]
+    isResult: true
+
   # LLM渡すコンテキストレイアウト
   context:
     agent: stringTemplateAgent
@@ -38,19 +52,29 @@ nodes:
             相談者の悩みを聞き、成功に導くのがあなたの仕事です。
             相談者を引き付けるために、一つ一つ質問を投げかけ、
             次の話題に移る前に、相談者の回答に対して反応してください。
+            ただしシステム開発に関係する会話のみ受け付けるようにしてください。
+
             回答は以下3点注意してください。
             1.100字以内で、会話の文章として日本語で回答すること
             2.マークダウン形式は使わないこと。
             3.回答の中に改行は入れないこと。
             
+            前回までの会話の流れは以下の通り。
+            ${1}
+
         person1:
           name: 相談者
           system: >
             あなたは仕事に悩んでいるシステムエンジニアです。
-            100文字以内で回答して。
+            回答は以下3点注意してください。
+            
+            1.100字以内で、会話の文章として日本語で回答すること
+            2.マークダウン形式は使わないこと。
+            3.回答の中に改行は入れないこと。
           greeting: 私は ${0} について相談したい。
     inputs:
       - :userInput
+      - :matome
 
   # messageの定義
   messages:
@@ -87,7 +111,7 @@ nodes:
     graph:
       loop:
         # ループ回数
-        count: 6
+        count: 5
       nodes:
         messages:
           value: []
@@ -99,9 +123,11 @@ nodes:
           # agent: openAIAgent
           # params:
           #   model: gpt-4o
+          # agent: geminiAgent
           agent: groqAgent
           params:
             model: Llama3-70b-8192
+            # model: Llama3-8b-8192
           inputs:
             - null
             - :messages
@@ -160,7 +186,7 @@ nodes:
     inputs:
       - ":nestedNode1_result"
 
- # その結果を受けて、別のmapエージェントにインプット
+ # その結果を受けて、まとめの作成
   nestedNode2:
     agent: "mapAgent"
     inputs: [:json]
@@ -174,11 +200,8 @@ nodes:
               以下を日本語で要約してください。200文字で。
               結果だけを回答すること。
               "${0}"
-          # contoleは必須
-          # console:
-            # after: true
-          # stringTemplateAgentのinputsは改行できない
           inputs: [:$0]
+        # まとめ用のLLM
         llm:
           agent: groqAgent
           params:
@@ -187,12 +210,50 @@ nodes:
         result_llm:
           agent: copyAgent
           inputs: [:llm.choices.$0.message.content]   
-          # isResult: true
+          isResult: true
         summarize:
           agent: "stringTemplateAgent"
           params:
             template: "\e[31mまとめ:\e[0m ${0}\n"
           inputs: [:result_llm]
-          # contoleは必須
           console:
             after: true
+        
+ # その結果を受けて、次の質問の作成
+  nestedNode3:
+    agent: "mapAgent"
+    inputs: [:json]
+    if: :nestedNode2
+    graph:
+      version: 0.3
+      nodes:
+        prompt:
+          agent: "stringTemplateAgent"
+          params:
+            template: > 
+              次に想定される質問を５つ考えて。
+              余計なことは言わずに、１つ目の結果から結果だけを回答すること。
+              50文字程度で日本語で。
+
+              "${0}"
+          inputs: [:$0]
+        llm:
+          agent: openAIAgent
+          params:
+            model: gpt-4o
+          # agent: geminiAgent
+          # agent: groqAgent
+          # params:
+          #   model: Llama3-70b-8192
+          inputs: [:prompt]
+        result_llm:
+          agent: copyAgent
+          inputs: [:llm.choices.$0.message.content]   
+        summarize:
+          agent: "stringTemplateAgent"
+          params:
+            template: "\e[31m【質問候補】【gpt-4o】:\e[0m\n${0}\n"
+          inputs: [:result_llm]
+          console:
+            after: true
+        
