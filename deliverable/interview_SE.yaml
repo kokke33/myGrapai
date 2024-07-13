@@ -231,7 +231,7 @@ nodes:
           agent: "stringTemplateAgent"
           params:
             template: > 
-              次に想定される質問を５つ考えて。
+              userの立場になって、次の質問を５つ考えて。
               余計なことは言わずに、１つ目の結果から結果だけを回答すること。
               50文字程度で日本語で。
 
