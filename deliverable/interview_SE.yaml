@@ -26,7 +26,7 @@ nodes:
       - {}
       - :userInput     
   # 会話まとめ
-  matome:
+  summary:
     value: []
     update: :matomeMessages
   matomeMessages:
@@ -51,11 +51,12 @@ nodes:
             プロジェクトマネージャです。
             相談者の悩みを聞き、成功に導くのがあなたの仕事です。
             相談者を引き付けるために、一つ一つ質問を投げかけ、
-            次の話題に移る前に、相談者の回答に対して反応してください。
+            次の話題に移る前に、相談者の答えに対して反応してください。
             ただしシステム開発に関係する会話のみ受け付けるようにしてください。
 
             回答は以下3点注意してください。
-            1.100字以内で、会話の文章として日本語で回答すること
+            1.回答は100字以内であること。
+            2.日本語であること。
             2.マークダウン形式は使わないこと。
             3.回答の中に改行は入れないこと。
             
@@ -74,7 +75,7 @@ nodes:
           greeting: 私は ${0} について相談したい。
     inputs:
       - :userInput
-      - :matome
+      - :summary
 
   # messageの定義
   messages:
@@ -111,7 +112,7 @@ nodes:
     graph:
       loop:
         # ループ回数
-        count: 5
+        count: 7
       nodes:
         messages:
           value: []
@@ -122,7 +123,8 @@ nodes:
         llm:
           # agent: openAIAgent
           # params:
-          #   model: gpt-4o
+            # model: gpt-4o
+            # model: gpt-3.5-turbo
           # agent: geminiAgent
           agent: groqAgent
           params:
@@ -197,12 +199,17 @@ nodes:
           agent: "stringTemplateAgent"
           params:
             template: > 
-              以下を日本語で要約してください。200文字で。
-              結果だけを回答すること。
+              日本語で要約してください。
+              文字数は200字程度で。
+              要約の結果だけを回答すること。
               "${0}"
           inputs: [:$0]
         # まとめ用のLLM
         llm:
+          # agent: openAIAgent
+          # params:
+          #   model: gpt-4o        
+          # agent: geminiAgent
           agent: groqAgent
           params:
             model: Llama3-70b-8192
@@ -231,10 +238,12 @@ nodes:
           agent: "stringTemplateAgent"
           params:
             template: > 
-              userの立場になって、次の質問を５つ考えて。
-              余計なことは言わずに、１つ目の結果から結果だけを回答すること。
+              userとassistantの会話をインプット情報として連携します。
+              あなたはuserとして、会話の流れからuserが質問するであろう
+              質問を５つ考えてください。
+              余計なことは言わずに、結果だけを回答すること。
               50文字程度で日本語で。
-
+              #インプット情報
               "${0}"
           inputs: [:$0]
         llm:
