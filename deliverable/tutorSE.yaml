@@ -7,6 +7,10 @@ nodes:
 
 # 意味
   meaning_jp_llm:
+    # agent: groqAgent
+    # params:
+      # model: gemma2-9b-it      
+      # model: Llama3-70b-8192      
     agent: openAIAgent
     params:
       model: gpt-4o
@@ -23,11 +27,15 @@ nodes:
 
 # サンプル
   samples_llm:
+    # agent: groqAgent
+    # params:
+      # model: gemma2-9b-it      
+      # model: Llama3-70b-8192  
     agent: openAIAgent
     params:
       model: gpt-4o
       system: |
-        "与えられた単語を含む、文章を10個作って。あまり難しい単語は使わずに。
+        "与えられた単語を含む、日本語の文章を10個作って。あまり難しい単語は使わずに。
         "
     inputs:
       - ":word"
@@ -40,6 +48,10 @@ nodes:
 
 # 類似語
   similar_llm:
+    # agent: groqAgent
+    # params:
+      # model: gemma2-9b-it      
+      # model: Llama3-70b-8192  
     agent: openAIAgent
     params:
       model: gpt-4o
@@ -57,11 +69,17 @@ nodes:
 
 # 補足説明
   root_llm:
+    # agent: groqAgent
+    # params:
+      # model: gemma2-9b-it      
+      # model: Llama3-70b-8192  
     agent: openAIAgent
     params:
       model: gpt-4o
       system: >
-        "あなたはベテランのプロジェクトマネージャーです。与えられた単語の語源を日本語で解説して。
+        "あなたはベテランのプロジェクトマネージャーです。
+        与えられた単語の語源を解説して。
+        すべて日本語で回答すること。
         "
     inputs:
       - ":word"
