@@ -74,6 +74,7 @@ nodes:
         llm:
           # agent: groqAgent
           # params:
+          #   model: gemma2-9b-it
           #   model: Llama3-70b-8192
           agent: openAIAgent
           params:
@@ -135,6 +136,9 @@ nodes:
         # ↑後で分かったことだが「LLMの回答（Contents）とtool_call回答の両方が入る」ことがある。その場合に上記エラーとなる。
         # 対策として、ループ判定を「:llm.choices.$0.message.content」⇒「loopCheck」の通りに修正した
         meaning_llm:
+          # agent: groqAgent
+          # params:
+          #   model: gemma2-9b-it        
           agent: openAIAgent
           params:
             model: gpt-4o

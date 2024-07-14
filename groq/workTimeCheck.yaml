@@ -114,12 +114,12 @@ nodes:
             - :messages
             - :userMessage
         llm:
-          # agent: groqAgent
-          # params:
-          #   model: gemma2-9b-it            
-          agent: openAIAgent
+          agent: groqAgent
           params:
-            model: gpt-4o
+            model: gemma2-9b-it            
+          # agent: openAIAgent
+          # params:
+          #   model: gpt-4o
             tools:
               - type: function
                 function:
@@ -235,12 +235,12 @@ nodes:
                   2.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）
           inputs: [:$0]
         llm:
-          # agent: groqAgent
-          # params:
-          #   model: gemma2-9b-it      
-          agent: openAIAgent
+          agent: groqAgent
           params:
-            model: gpt-4o
+            model: gemma2-9b-it      
+          # agent: openAIAgent
+          # params:
+          #   model: gpt-4o
           inputs: [:prompt]
         result_llm:
           agent: copyAgent

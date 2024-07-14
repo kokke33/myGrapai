@@ -25,7 +25,7 @@ nodes:
     inputs:
       - {}
       - :userInput     
-  # 会話まとめ
+  # 直近の会話まとめ。次の会話へのインプットとする。
   summary:
     value: []
     update: :matomeMessages
@@ -47,18 +47,18 @@ nodes:
         person0:
           name: プロジェクトマネージャ
           system: >
-            あなたは数多くのプロジェクトを成功させてきたベテランの
-            プロジェクトマネージャです。
+            あなたは数多くのプロジェクトを成功させてきた
+            ベテランのプロジェクトマネージャーです。
             相談者の悩みを聞き、成功に導くのがあなたの仕事です。
-            相談者を引き付けるために、一つ一つ質問を投げかけ、
-            次の話題に移る前に、相談者の答えに対して反応してください。
-            ただしシステム開発に関係する会話のみ受け付けるようにしてください。
+            相談者を引きつけるため、一つ一つ質問を投げかけ、
+            次の話題に移る前に相談者の答えに対して反応してください。
+            ただし、システム開発に関する会話のみを受け付けるようにしてください。
+            回答は以下4点注意してください。
 
-            回答は以下3点注意してください。
-            1.回答は100字以内であること。
-            2.日本語であること。
-            2.マークダウン形式は使わないこと。
-            3.回答の中に改行は入れないこと。
+              1.回答は100字以内であること。
+              2.日本語であること。
+              3.マークダウン形式は使わないこと。
+              4.改行は入れないこと。
             
             前回までの会話の流れは以下の通り。
             ${1}
@@ -69,9 +69,10 @@ nodes:
             あなたは仕事に悩んでいるシステムエンジニアです。
             回答は以下3点注意してください。
             
-            1.100字以内で、会話の文章として日本語で回答すること
-            2.マークダウン形式は使わないこと。
-            3.回答の中に改行は入れないこと。
+              1.100字以内で、会話の文章として日本語で回答すること
+              2.マークダウン形式は使わないこと。
+              3.改行は入れないこと。
+              
           greeting: 私は ${0} について相談したい。
     inputs:
       - :userInput
@@ -106,8 +107,6 @@ nodes:
       namedInputs:
         - messages
         - context
-    # isResult: true
-    
     # 入れ子の処理
     graph:
       loop:
@@ -126,8 +125,10 @@ nodes:
             # model: gpt-4o
             # model: gpt-3.5-turbo
           # agent: geminiAgent
+          #   model: gemini-1.5-pro
           agent: groqAgent
           params:
+            # model: gemma2-9b-it
             model: Llama3-70b-8192
             # model: Llama3-8b-8192
           inputs:
@@ -142,14 +143,12 @@ nodes:
           inputs:
             - :llm.choices.$0.message.content
             - :context.person0.name
-
         reducer:
           agent: pushAgent
           inputs:
             - :messages
             - :llm.choices.$0.message
           isResult: true
-
         swappedContext:
           agent: propertyFilterAgent
           params:
@@ -157,7 +156,6 @@ nodes:
               person0: person1
           inputs:
             - :context
-    
         swappedMessages:
           agent: propertyFilterAgent
           params:
@@ -180,7 +178,7 @@ nodes:
 
   # json形式のデータを元に戻す
   # ※次のnestedNode2で引数に与えられないため
-  json:
+  restore_json:
     agent: jsonParserAgent
     params:
       stringify: true
@@ -191,7 +189,7 @@ nodes:
  # その結果を受けて、まとめの作成
   nestedNode2:
     agent: "mapAgent"
-    inputs: [:json]
+    inputs: [:restore_json]
     graph:
       version: 0.3
       nodes:
@@ -199,9 +197,8 @@ nodes:
           agent: "stringTemplateAgent"
           params:
             template: > 
-              日本語で要約してください。
-              文字数は200字程度で。
-              要約の結果だけを回答すること。
+              日本語で200字程度に要約してください。
+              要約の結果だけを回答してください。
               "${0}"
           inputs: [:$0]
         # まとめ用のLLM
@@ -212,6 +209,7 @@ nodes:
           # agent: geminiAgent
           agent: groqAgent
           params:
+            # model: gemma2-9b-it
             model: Llama3-70b-8192
           inputs: [:prompt]
         result_llm:
@@ -229,7 +227,7 @@ nodes:
  # その結果を受けて、次の質問の作成
   nestedNode3:
     agent: "mapAgent"
-    inputs: [:json]
+    inputs: [:restore_json]
     if: :nestedNode2
     graph:
       version: 0.3
@@ -238,11 +236,8 @@ nodes:
           agent: "stringTemplateAgent"
           params:
             template: > 
-              userとassistantの会話をインプット情報として連携します。
-              あなたはuserとして、会話の流れからuserが質問するであろう
-              質問を５つ考えてください。
-              余計なことは言わずに、結果だけを回答すること。
-              50文字程度で日本語で。
+              userとassistantの会話を基に、最後にuserが質問すべき質問を5つ考えてください。
+              結果のみ100文字以内の日本語で回答してください。
               #インプット情報
               "${0}"
           inputs: [:$0]
@@ -253,7 +248,8 @@ nodes:
           # agent: geminiAgent
           # agent: groqAgent
           # params:
-          #   model: Llama3-70b-8192
+          #   model: gemma2-9b-it
+            # model: Llama3-70b-8192
           inputs: [:prompt]
         result_llm:
           agent: copyAgent
