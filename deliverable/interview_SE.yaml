@@ -4,7 +4,7 @@ loop:
   # continueがTrueとなる間
   while: :continue
 nodes:
-  # 入力を確認
+  # 入力確認最新化
   continue:
     value: true
     update: :checkInput.continue
@@ -24,11 +24,13 @@ nodes:
           notEqual: /bye
     inputs:
       - {}
-      - :userInput     
+      - :userInput
+
   # 直近の会話まとめ。次の会話へのインプットとする。
   summary:
     value: []
-    update: :matomeMessages
+    update: :reducer
+    isResult: true
   matomeMessages:
     agent: stringTemplateAgent
     params:
@@ -37,7 +39,13 @@ nodes:
     # console:
     #   after: true
     inputs: [":nestedNode2.result_llm"]
-    isResult: true
+    # isResult: true
+  # LLMの結果を配列に入れる
+  reducer:
+    agent: pushAgent
+    inputs:
+      - :summary
+      - :matomeMessages   
 
   # LLM渡すコンテキストレイアウト
   context:
@@ -61,8 +69,8 @@ nodes:
               4.改行は入れないこと。
             
             前回までの会話の流れは以下の通り。
+            #前回までの会話
             ${1}
-
         person1:
           name: 相談者
           system: >
@@ -103,6 +111,7 @@ nodes:
       - :messages
       - :context
     if: :checkInput.continue
+    # inputsに対して名前を付ける。来れない場合は$0、$1・・・となる。
     params:
       namedInputs:
         - messages
@@ -137,12 +146,13 @@ nodes:
         output:
           agent: stringTemplateAgent
           params:
-            template: "\e[34m>${1}:\e[0m ${0}\n"
+            template: "\e[34m>${1}:【${2}】\e[0m\n${0}\n"
           console:
             after: true
           inputs:
             - :llm.choices.$0.message.content
             - :context.person0.name
+            - :llm.model
         reducer:
           agent: pushAgent
           inputs:
@@ -219,11 +229,11 @@ nodes:
         summarize:
           agent: "stringTemplateAgent"
           params:
-            template: "\e[31mまとめ:\e[0m ${0}\n"
-          inputs: [:result_llm]
+            template: "\e[31mまとめ【${1}】:\e[0m\n${0}\n"
+          inputs: [:result_llm,:llm.model]
           console:
             after: true
-        
+
  # その結果を受けて、次の質問の作成
   nestedNode3:
     agent: "mapAgent"
@@ -236,7 +246,8 @@ nodes:
           agent: "stringTemplateAgent"
           params:
             template: > 
-              userとassistantの会話を基に、最後にuserが質問すべき質問を5つ考えてください。
+              user（相談者）とassistant（ベテランのプロジェクトマネージャ）
+              の会話を基に、最後にuserが質問すべき質問を5つ考えてください。
               結果のみ100文字以内の日本語で回答してください。
               #インプット情報
               "${0}"
@@ -257,8 +268,7 @@ nodes:
         summarize:
           agent: "stringTemplateAgent"
           params:
-            template: "\e[31m【質問候補】【gpt-4o】:\e[0m\n${0}\n"
-          inputs: [:result_llm]
+            template: "\e[31m【質問候補】【${1}】:\e[0m\n${0}\n"
+          inputs: [:result_llm,:llm.model]
           console:
             after: true
-        
