@@ -1,0 +1,47 @@
+version: 0.3
+loop:
+  while: :continue
+nodes:
+  continue:
+    value: true
+    update: :checkInput.continue
+
+  userInput_name:
+    agent: textInputAgent
+    params:
+      message: "トピック:"  
+    console:
+      before: "何について知りたいですか？"
+      
+  checkInput:
+    agent: propertyFilterAgent
+    params:
+      inspect:
+        - propId: continue
+          notEqual: /bye
+    inputs:
+      - {}
+      - :userInput_name      
+  prompt_topic:
+    agent: stringTemplateAgent
+    params:
+      template: > 
+        「${0}」について日本語で回答してください。
+    inputs: 
+      - :userInput_name
+  prompt_query:
+    agent: stringTemplateAgent
+    params:
+      template: > 
+        「${0}」について教えてください。
+    inputs: 
+      - :userInput_name        
+      
+  wikipedia:
+    console:
+      after: ...fetching data from wikkpedia
+    agent: wikipediaAgent
+    inputs:
+      - :userInput_name
+    params:
+      lang: ja

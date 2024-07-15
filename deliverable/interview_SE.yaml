@@ -111,7 +111,7 @@ nodes:
       - :messages
       - :context
     if: :checkInput.continue
-    # inputsに対して名前を付ける。来れない場合は$0、$1・・・となる。
+    # inputsに対して名前を付ける。設定しない場合は「$0、$1...」となる。
     params:
       namedInputs:
         - messages
