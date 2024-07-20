@@ -13,9 +13,12 @@ nodes:
       # model: Llama3-70b-8192      
     agent: openAIAgent
     params:
-      model: gpt-4o
+      # model: gpt-4o
+      model: gpt-4o-mini
       system: >
-        "あなたはシステム業界の教師です。与えられた単語の意味を日本語で説明してください。"
+        "あなたはシステム開発会社で活躍して数多くのプロジェクトを成功に導いた
+        大ベテランのプロジェクトマネージャーです。
+         与えられた単語の意味を日本語で説明してください。"
     inputs:
       - ":word"
   meaning_jp:
@@ -33,7 +36,8 @@ nodes:
       # model: Llama3-70b-8192  
     agent: openAIAgent
     params:
-      model: gpt-4o
+      # model: gpt-4o
+      model: gpt-4o-mini
       system: |
         "与えられた単語を含む、日本語の文章を10個作って。あまり難しい単語は使わずに。
         "
@@ -54,7 +58,8 @@ nodes:
       # model: Llama3-70b-8192  
     agent: openAIAgent
     params:
-      model: gpt-4o
+      # model: gpt-4o
+      model: gpt-4o-mini
       system: |
         "与えられた単語をと類似するいくつか単語を並べて、日本語で違いを説明して。
         "
@@ -75,9 +80,11 @@ nodes:
       # model: Llama3-70b-8192  
     agent: openAIAgent
     params:
-      model: gpt-4o
+      # model: gpt-4o
+      model: gpt-4o-mini
       system: >
-        "あなたはベテランのプロジェクトマネージャーです。
+        "あなたはシステム開発会社で活躍して数多くのプロジェクトを成功に導いた
+        大ベテランのプロジェクトマネージャーです。
         与えられた単語の語源を解説して。
         すべて日本語で回答すること。
         "
