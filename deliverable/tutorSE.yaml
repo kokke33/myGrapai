@@ -1,11 +1,31 @@
 version: 0.3
+# ループ処理
+loop:
+  # continueがTrueとなる間
+  while: :continue
 nodes:
   word:
     agent: textInputAgent
     params:
       message: "勉強したいシステム用語を入力してください:"
 
-# 意味
+  # 入力確認最新化
+  continue:
+    value: true
+    update: :checkInput.continue
+    
+  # 入力が「/bye」以外なら変数continueをtrueにする
+  checkInput:
+    agent: propertyFilterAgent
+    params:
+      inspect:
+        - propId: continue
+          notEqual: /bye
+    inputs:
+      - {}
+      - :word
+
+  # 意味
   meaning_jp_llm:
     # agent: groqAgent
     # params:
@@ -28,7 +48,7 @@ nodes:
     inputs:
       - ":meaning_jp_llm.choices.$0.message.content"
 
-# サンプル
+  # サンプル
   samples_llm:
     # agent: groqAgent
     # params:
@@ -50,7 +70,7 @@ nodes:
     inputs:
       - ":samples_llm.choices.$0.message.content"
 
-# 類似語
+  # 類似語
   similar_llm:
     # agent: groqAgent
     # params:
@@ -72,7 +92,7 @@ nodes:
     inputs:
       - ":similar_llm.choices.$0.message.content"
 
-# 補足説明
+  # 補足説明
   root_llm:
     # agent: groqAgent
     # params:
@@ -97,12 +117,18 @@ nodes:
     inputs:
       - ":root_llm.choices.$0.message.content"
 
-# 最終的な出力
+  # 最終的な出力
   root_output:
     agent: stringTemplateAgent
     # isResult: true
     params:
-      template: "\e[32m■ 意味\e[0m: \n ${0} \n\n\e[32m■ 用語を使った例文\e[0m: \n ${1} \n\n\e[32m■ 類似語\e[0m: \n ${2} \n\n\e[32m■ コメント\e[0m: \n ${3} \n"
+      template: 
+        "
+        \e[32m■ 意味\e[0m: \n ${0} \n\n
+        \e[32m■ 用語を使った例文\e[0m: \n${1} \n\n
+        \e[32m■ 類似語\e[0m: \n ${2} \n\n
+        \e[32m■ コメント\e[0m: \n ${3} \n
+        "
     console:
       after: true
     inputs:

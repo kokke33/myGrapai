@@ -120,7 +120,7 @@ nodes:
     graph:
       loop:
         # ループ回数
-        count: 9
+        count: 7
       nodes:
         messages:
           value: []
@@ -131,15 +131,15 @@ nodes:
         llm:
           # agent: openAIAgent
           # params:
-          #   model: gpt-4o-mini
+            # model: gpt-4o-mini
             # model: gpt-4o
             # model: gpt-3.5-turbo
           # agent: geminiAgent
-          #   model: gemini-1.5-pro
+            # model: gemini-1.5-pro
           agent: groqAgent
           params:
-            # model: gemma2-9b-it
             model: Llama3-70b-8192
+            # model: gemma2-9b-it
             # model: Llama3-8b-8192
           inputs:
             - null
