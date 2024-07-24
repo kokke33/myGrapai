@@ -23,7 +23,7 @@ nodes:
         - propId: continue
           notEqual: /bye
     inputs:
-      - {}
+      # - {}
       - :userInput
 
   # 直近の会話まとめ。次の会話へのインプットとする。
@@ -31,21 +31,21 @@ nodes:
     value: []
     update: :reducer
     isResult: true
-  matomeMessages:
+  accumulationSummary:
     agent: stringTemplateAgent
     params:
       template: "\e[34m会話まとめ:\e[0m ${0}\n"
     # 画面出力しないためにコメントアウト
     # console:
     #   after: true
-    inputs: [":nestedNode2.result_llm"]
+    inputs: [":summaryChat.result_llm"]
     # isResult: true
   # LLMの結果を配列に入れる
   reducer:
     agent: pushAgent
     inputs:
       - :summary
-      - :matomeMessages   
+      - :accumulationSummary   
 
   # LLM渡すコンテキストレイアウト
   context:
@@ -138,11 +138,14 @@ nodes:
             # model: gemini-1.5-pro
           agent: groqAgent
           params:
-            model: Llama3-70b-8192
+            model: llama-3.1-70b-versatile
+            # model: llama-3.1-405b-reasoning
+            # model: llama3-groq-70b-8192-tool-use-preview
+            # model: Llama3-70b-8192
             # model: gemma2-9b-it
             # model: Llama3-8b-8192
           inputs:
-            - null
+            - null  
             - :messages
         output:
           agent: stringTemplateAgent
@@ -183,9 +186,9 @@ nodes:
             - :swappedContext.person0.system  
 
   # 最初のネストノードの結果をインプットにした処理
-  nestedNode1_result:
-    agent: "bypassAgent"
-    inputs: [":chat.reducer"]
+  # nestedNode1_result:
+  #   agent: "bypassAgent"
+  #   inputs: [":chat.reducer"]
 
   # json形式のデータを元に戻す
   # ※次のnestedNode2で引数に与えられないため
@@ -195,10 +198,10 @@ nodes:
       stringify: true
     isResult: true
     inputs:
-      - ":nestedNode1_result"
+      - ":chat.reducer"
 
  # その結果を受けて、まとめの作成
-  nestedNode2:
+  summaryChat:
     agent: "mapAgent"
     inputs: [:restore_json]
     graph:
@@ -237,10 +240,10 @@ nodes:
             after: true
 
  # その結果を受けて、次の質問の作成
-  nestedNode3:
+  nextfQuestionMake:
     agent: "mapAgent"
     inputs: [:restore_json]
-    if: :nestedNode2
+    if: :summaryChat
     graph:
       version: 0.3
       nodes:
@@ -249,7 +252,7 @@ nodes:
           params:
             template: > 
               user（相談者）とassistant（ベテランのプロジェクトマネージャ）
-              の会話を基に、最後にuserが質問すべき質問を5つ考えてください。
+              の会話を基に、最後にuserが質問すべき質問を10個考えてください。
               結果のみ100文字以内の日本語で回答してください。
               #インプット情報
               "${0}"

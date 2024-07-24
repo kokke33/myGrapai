@@ -22,7 +22,7 @@ nodes:
         - propId: continue
           notEqual: /bye
     inputs:
-      - {}
+      # - {}
       - :word
 
   # 意味
