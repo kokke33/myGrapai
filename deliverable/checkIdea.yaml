@@ -1,0 +1,98 @@
+version: 0.3
+# ループ処理
+loop:
+  # continueがTrueとなる間
+  while: :continue
+nodes:
+  # 入力確認最新化
+  continue:
+    value: true
+    update: :checkInput.continue
+  # 入力
+  userInput:
+    agent: textInputAgent
+    params:
+      message: "アイデアが欲しいトピックス:"  
+    console:
+      before:
+         "\e[1;32m■アイデアだししてほしいトピックを教えてください\n
+        　例：「効率的な単体テストの実施方法」:\e[0m"
+  # 入力が「/bye」以外なら変数continueをtrueにする
+  checkInput:
+    agent: propertyFilterAgent
+    params:
+      inspect:
+        - propId: continue
+          notEqual: /bye
+    inputs:
+      - {}
+      - :userInput
+  node1:
+    agent: stringTemplateAgent
+    params:
+      template: >
+        ベテランのプロジェクトマネージャとして、以下に関するアイデアを10個考えてください。
+        理由は改行して２文字空けてから記載してください。
+        結果には、マークダウン形式を使用しないでください。
+       
+        ${0}
+    inputs: 
+      - :userInput
+    # isResult: true
+  node1_LLM:
+    # agent: groqAgent
+    # params:
+    #   model: llama-3.1-70b-versatile
+    agent: openAIAgent
+    params:
+      model: gpt-4o-mini   
+    inputs: 
+      - :node1
+    isResult: true
+  node2:
+    agent: stringTemplateAgent
+    inputs: [":node1_LLM.choices.$0.message.content"]
+    params:
+      template: |
+        ベテランのプロジェクトマネージャとして、以下のアイデアを評価してください。
+        アイデアの後を記載後、その次の行に２文字空けてから評価内容を記載してください。
+        結果には、マークダウン形式を使用しないでください。
+       
+        ${0}
+  node3:
+    # agent: groqAgent
+    # params:
+    #   model: llama-3.1-70b-versatile  
+    agent: openAIAgent
+    params:
+      model: gpt-4o-mini   
+    inputs:
+      - :node2
+    # isResult: true
+  node4:
+    agent: stringTemplateAgent
+    inputs: [":node1_LLM.choices.$0.message.content", ":node3.choices.$0.message.content"]
+    params:
+      template: |
+        この中から金メダル、銀メダル、銅メダルとなるアイデアと、その選定理由も説明してください。
+        結果には、マークダウン形式を使用しないでください。
+        [アイデア]
+        ${0}
+        [評価]
+        ${1}
+  node5:
+    # agent: groqAgent
+    # params:
+    #   model: llama-3.1-70b-versatile  
+    agent: openAIAgent
+    params:
+      model: gpt-4o-mini   
+    inputs:
+      - :node4
+  output:
+    agent: stringTemplateAgent
+    inputs: [":node1_LLM.choices.$0.message.content", ":node3.choices.$0.message.content", ":node5.choices.$0.message.content"]
+    params:
+      template: "\e[34m[解決策]\e[0m\n${0}\n\n\e[31m[評価]\e[0m\n${1}\n\n\e[31m[結果]\e[0m\n${2}"
+    console:
+      after: true
