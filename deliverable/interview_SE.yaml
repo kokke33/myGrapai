@@ -111,6 +111,7 @@ nodes:
       - :messages
       - :context
     if: :checkInput.continue
+      # - :userInput
     # inputsに対して名前を付ける。設定しない場合は「$0、$1...」となる。
     params:
       namedInputs:
@@ -138,10 +139,10 @@ nodes:
             # model: gemini-1.5-pro
           agent: groqAgent
           params:
-            model: llama-3.1-70b-versatile
+            # model: llama-3.1-70b-versatile
             # model: llama-3.1-405b-reasoning
             # model: llama3-groq-70b-8192-tool-use-preview
-            # model: Llama3-70b-8192
+            model: Llama3-70b-8192
             # model: gemma2-9b-it
             # model: Llama3-8b-8192
           inputs:
