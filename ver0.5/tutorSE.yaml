@@ -1,4 +1,4 @@
-version: 0.3
+version: 0.5
 # ループ処理
 loop:
   # continueがTrueとなる間
@@ -42,7 +42,8 @@ nodes:
          英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。
          "
     inputs:
-      - ":word"
+      -prompt: ":word"
+    if: :checkInput.continue
   meaning_jp:
     agent: copyAgent
     # agent: jsonParserAgent
@@ -66,7 +67,8 @@ nodes:
         英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。
         "
     inputs:
-      - ":word"
+      prompt: ":word"
+    if: :checkInput.continue
   samples:
     agent: copyAgent
     # agent: jsonParserAgent
@@ -90,7 +92,8 @@ nodes:
         英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。
         "
     inputs:
-      - ":word"
+      prompt: ":word"
+    if: :checkInput.continue
   similar:
     agent: copyAgent
     # agent: jsonParserAgent
@@ -115,7 +118,8 @@ nodes:
         英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。
         "
     inputs:
-      - ":word"
+      prompt: ":word"
+    if: :checkInput.continue
   root:
     agent: copyAgent
     # agent: jsonParserAgent

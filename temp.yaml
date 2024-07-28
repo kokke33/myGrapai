@@ -4,28 +4,22 @@ nodes:
     agent: stringTemplateAgent
     params:
       template: > 
-          社員番号を入力してください
+          質問内容を入力してください。
     console:
       after: true          
-    # inputs: [:$0]
-  # prompt:
-  #   agent: echoAgent
-  #   params: 
-  #     - "test"
-  #   isResult: true
-  # input: 
-  #   agent: textInputAgent
-  #   params:
-  #     message: "何について知りたい？" 
-  # llm:
-  #   agent: openAIAgent
-  #   params:
-  #     model: gpt-4o
-  #   inputs:
-  #     - :input
-  # output:
-  #   agent: copyAgent
-  #   console:
-  #     after: true
-  #   inputs:
-  #     - :llm.choices.$0.message.content
+  input: 
+    agent: textInputAgent
+    params:
+      message: "何について知りたい？" 
+  llm:
+    agent: openAIAgent
+    params:
+      model: gpt-4o
+    inputs:
+      - :input
+  output:
+    agent: copyAgent
+    console:
+      after: true
+    inputs:
+      - :llm.choices.$0.message.content

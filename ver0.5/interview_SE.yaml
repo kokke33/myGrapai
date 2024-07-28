@@ -1,4 +1,4 @@
-version: 0.3
+version: 0.5
 # ループ処理
 loop:
   # continueがTrueとなる間
@@ -44,8 +44,8 @@ nodes:
   reducer:
     agent: pushAgent
     inputs:
-      - :summary
-      - :accumulationSummary   
+      array: :summary
+      item: :accumulationSummary   
 
   # LLM渡すコンテキストレイアウト
   context:
@@ -108,20 +108,20 @@ nodes:
     agent: nestedAgent
     # nestedAgentのインプットは２つあって、揃ってないと動かない
     inputs:
-      - :messages
-      - :context
+      messages: :messages
+      context: :context
     if: :checkInput.continue
       # - :userInput
     # inputsに対して名前を付ける。設定しない場合は「$0、$1...」となる。
-    params:
-      namedInputs:
-        - messages
-        - context
+    # params:
+    #   namedInputs:
+    #     - messages
+    #     - context
     # 入れ子の処理
     graph:
       loop:
         # ループ回数
-        count: 7
+        count: 3
       nodes:
         messages:
           value: []
@@ -146,8 +146,7 @@ nodes:
             # model: gemma2-9b-it
             # model: Llama3-8b-8192
           inputs:
-            - null  
-            - :messages
+            messages: :messages
         output:
           agent: stringTemplateAgent
           params:
@@ -161,8 +160,8 @@ nodes:
         reducer:
           agent: pushAgent
           inputs:
-            - :messages
-            - :llm.choices.$0.message
+            array: :messages
+            item: :llm.choices.$0.message
           isResult: true
         swappedContext:
           agent: propertyFilterAgent
@@ -204,9 +203,11 @@ nodes:
  # その結果を受けて、まとめの作成
   summaryChat:
     agent: "mapAgent"
-    inputs: [:restore_json]
+    inputs: 
+      # rows: [:chat.reducer]
+      rows: [:restore_json]
     graph:
-      version: 0.3
+      version: 0.5
       nodes:
         prompt:
           agent: "stringTemplateAgent"
@@ -215,7 +216,7 @@ nodes:
               日本語で400字程度に要約してください。
               要約の結果だけを回答してください。
               "${0}"
-          inputs: [:$0]
+          inputs: [:row]
         # まとめ用のLLM
         llm:
           agent: openAIAgent
@@ -227,7 +228,8 @@ nodes:
           # params:
             # model: gemma2-9b-it
             # model: Llama3-70b-8192
-          inputs: [:prompt]
+          inputs: 
+            prompt: :prompt
         result_llm:
           agent: copyAgent
           inputs: [:llm.choices.$0.message.content]   
@@ -243,10 +245,11 @@ nodes:
  # その結果を受けて、次の質問の作成
   nextfQuestionMake:
     agent: "mapAgent"
-    inputs: [:restore_json]
+    inputs: 
+      rows: [:restore_json]
     if: :summaryChat
     graph:
-      version: 0.3
+      version: 0.5
       nodes:
         prompt:
           agent: "stringTemplateAgent"
@@ -257,7 +260,7 @@ nodes:
               結果のみ100文字以内の日本語で回答してください。
               #インプット情報
               "${0}"
-          inputs: [:$0]
+          inputs: [:row]
         llm:
           agent: openAIAgent
           params:
@@ -267,7 +270,8 @@ nodes:
           # params:
           #   model: gemma2-9b-it
             # model: Llama3-70b-8192
-          inputs: [:prompt]
+          inputs: 
+            prompt: :prompt
         result_llm:
           agent: copyAgent
           inputs: [:llm.choices.$0.message.content]   

@@ -1,15 +1,24 @@
-verbose: true
 version: 0.5
 nodes:
-  node1:
-    agent: openAIAgent
-    params:
-      model: gpt-4
-    inputs:
-      prompt: |
-        "GraphAIを用いたスタートアップのビジネスアイデアを10個考えてください。
+  prompt:
+    # value: "Explain ML's transformer in 100 words.in japanese"
+    # value: >
+    #     AIスタートアップのビジネスアイデアを10個考えてください。
+    #     すべて日本語で回答すること。
+    value: >
+        "GraphAIを用いたスタートアップのビジネスアイデアを5個考えてください。
         GraphAIの情報は以下のURLを参考にしてください。
         https://receptron.github.io/graphai/apiDoc/index.html"
+  node1:
+    # agent: groqAgent
+    # params:
+    #   model: Llama3-70b-8192
+    agent: openAIAgent
+    params:
+      model: gpt-4o-mini   
+    inputs:
+      prompt: :prompt
+    # isResult: true
   node2:
     agent: stringTemplateAgent
     inputs: [":node1.choices.$0.message.content"]
@@ -19,8 +28,11 @@ nodes:
         ${0}
   node3:
     agent: openAIAgent
+    params:
+      model: gpt-4o-mini   
     inputs:
-      prompt: ":node2"
+      prompt: :node2
+    # isResult: true
   node4:
     agent: stringTemplateAgent
     inputs: [":node1.choices.$0.message.content", ":node3.choices.$0.message.content"]
@@ -33,8 +45,10 @@ nodes:
         ${1}
   node5:
     agent: openAIAgent
+    params:
+      model: gpt-4o-mini   
     inputs:
-      prompt: ":node4"
+      prompt: :node4
   output:
     agent: stringTemplateAgent
     inputs: [":node1.choices.$0.message.content", ":node3.choices.$0.message.content", ":node5.choices.$0.message.content"]
