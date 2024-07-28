@@ -1,4 +1,4 @@
-version: 0.3
+version: 0.5
 nodes:
   # 最初のプロンプト
   First_prompt:
@@ -10,9 +10,10 @@ nodes:
   
   nestedNode1:
     agent: "mapAgent"
-    inputs: [:First_prompt]
+    inputs:
+      rows: [:First_prompt]
     graph:
-      version: 0.3
+      version: 0.5
       loop:
         while: :continue
       nodes:
@@ -68,8 +69,8 @@ nodes:
         appendedMessages:
           agent: pushAgent
           inputs:
-            - :messages
-            - :userMessage
+            array: :messages
+            item: :userMessage
         
         # LLM
         llm:
@@ -95,15 +96,14 @@ nodes:
                     required:
                       - myPrompt
           inputs:
-            - null
-            - :appendedMessages
+            messages: :appendedMessages
 
         # LLMの結果を配列に入れる
         reducer:
           agent: pushAgent
           inputs:
-            - :appendedMessages
-            - :llm.choices.$0.message
+            array: :appendedMessages
+            item: :llm.choices.$0.message
 
         # LLMの結果を画面に返却
         output:
@@ -129,9 +129,10 @@ nodes:
           params:
             model: gpt-4o-mini
             system: >
-              あなたはプロのプロンプト作成者です。このプロンプトをレビューし最適化し、結果だけを返却してください。
+              あなたはプロのプロンプト作成者です。
+              このプロンプトをレビューし最適化し、結果だけを返却してください。
           inputs:
-            - :llm.choices.$0.message.tool_calls.$0.function.arguments
+            prompt: :llm.choices.$0.message.tool_calls.$0.function.arguments
           if: :llm.choices.$0.message.tool_calls
 
         # Json形式だと「nestedNode1_result」で出力できないので
@@ -173,9 +174,10 @@ nodes:
   ####################################################
   checkIdea:
     agent: "mapAgent"
-    inputs: [:nestedNode1_result]
+    inputs:
+      rows: [:nestedNode1_result]
     graph:
-      version: 0.3
+      version: 0.5
       loop:
         while: :continue
       nodes:
@@ -221,8 +223,8 @@ nodes:
         reducer:
           agent: pushAgent
           inputs:
-            - :summary
-            - :accumulationSummary   
+            array: :summary
+            item: :accumulationSummary   
 
         node1:
           agent: stringTemplateAgent
@@ -252,7 +254,7 @@ nodes:
           params:
             model: gpt-4o-mini   
           inputs: 
-            - :node1
+            prompt: :node1
           isResult: true
         node2:
           agent: stringTemplateAgent
@@ -277,7 +279,7 @@ nodes:
           params:
             model: gpt-4o-mini   
           inputs:
-            - :node2
+            prompt: :node2
           # isResult: true
         node4:
           agent: stringTemplateAgent
@@ -302,7 +304,7 @@ nodes:
           params:
             model: gpt-4o-mini   
           inputs:
-            - :node4
+            prompt: :node4
         output:
           agent: stringTemplateAgent
           inputs: [":node1_LLM.choices.$0.message.content", ":node3.choices.$0.message.content", ":node5.choices.$0.message.content",":nextQA.choices.$0.message.content",":summaryChat.choices.$0.message.content"]
@@ -324,7 +326,7 @@ nodes:
               "以下のアイデアに対して次の質問を5個ほど提示して。
               英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。"
           inputs:
-            - :node5.choices.$0.message.content      
+            prompt: :node5.choices.$0.message.content      
         summaryChat:
           # agent: groqAgent
           # params:
@@ -337,7 +339,7 @@ nodes:
               "選定された3つのアイデアを1つの文章にまとめてください。
               英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください"
           inputs:
-            - :node5.choices.$0.message.content                
+            prompt: :node5.choices.$0.message.content                
         matome:
           agent: stringTemplateAgent
           console:

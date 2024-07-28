@@ -23,7 +23,7 @@ nodes:
         - propId: continue
           notEqual: /bye
     inputs:
-      # - {}
+      - {}
       - :userInput
 
   # 直近の会話まとめ。次の会話へのインプットとする。

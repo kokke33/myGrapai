@@ -1,4 +1,4 @@
-version: 0.3
+version: 0.5
 nodes:
   # 一番最初の処理
   First_prompt:
@@ -16,9 +16,9 @@ nodes:
     agent: "mapAgent"
     # mapAgentにinputsは必須らしいので適当に設定
     inputs: 
-      - ":First_prompt"
+      rows: [":First_prompt"]
     graph:
-      version: 0.3     
+      version: 0.5
       loop:
         while: :continue
       nodes:
@@ -114,8 +114,8 @@ nodes:
         appendedMessages:
           agent: pushAgent
           inputs:
-            - :messages
-            - :userMessage
+            array: :messages
+            item: :userMessage
         llm:
           # agent: groqAgent
           # params:
@@ -170,8 +170,7 @@ nodes:
                       - breakTimeEnd2
                       - workTotalTime
           inputs:
-            - null
-            - :appendedMessages
+            messages: :appendedMessages
         argumentsParser:
           # agent: jsonParserAgent
           agent: copyAgent
@@ -190,8 +189,8 @@ nodes:
         reducer:
           agent: pushAgent
           inputs:
-            - :appendedMessages
-            - :llm.choices.$0.message
+            array: :appendedMessages
+            item: :llm.choices.$0.message
         # LLMのfinish_reasonを確認。tool_calls以外は「stop」
         # stopの時にループする
         loopCheck:
@@ -214,9 +213,10 @@ nodes:
   # その結果を受けて、別のmapエージェントにインプット
   nestedNode2:
     agent: "mapAgent"
-    inputs: [:nestedNode1_result]
+    inputs: 
+      rows: [:nestedNode1_result]
     graph:
-      version: 0.3
+      version: 0.5
       nodes:
         # stringTemplateAgent_node:
         #   agent: "stringTemplateAgent"
@@ -237,7 +237,7 @@ nodes:
                 入力データをもとに、以下を追加して。
                   1.深夜時間を追加（22時～05時の間は深夜時間）
                   2.コメントを追加（労働基準監督者としてインプットの労働状況に対してコメントを100字以内で述べて）
-          inputs: [:$0]
+          inputs: [:row]
         llm:
           # agent: groqAgent
           # params:
@@ -246,7 +246,8 @@ nodes:
           params:
             model: gpt-4o-mini
             # model: gpt-4o
-          inputs: [:prompt]
+          inputs: 
+            prompt: [:prompt]
         result_llm:
           agent: copyAgent
           inputs: [:llm.choices.$0.message.content]

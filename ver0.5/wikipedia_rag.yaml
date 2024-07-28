@@ -1,4 +1,4 @@
-version: 0.3
+version: 0.5
 loop:
   while: :continue
 nodes:
@@ -50,7 +50,7 @@ nodes:
       before: ...splitting the article into chunks
     agent: stringSplitterAgent
     inputs:
-      - :wikipedia.content
+      text: :wikipedia.content
   embeddings:
     console:
       before: ...fetching embeddings for chunks
@@ -66,17 +66,17 @@ nodes:
   similarityCheck:
     agent: dotProductAgent
     inputs:
-      - :embeddings
-      - :topicEmbedding.$0
+      matrix: :embeddings
+      vector: :topicEmbedding.$0
   sortedChunks:
     agent: sortByValuesAgent
     inputs:
-      - :chunks.contents
-      - :similarityCheck
+      array: :chunks.contents
+      values: :similarityCheck
   referenceText:
     agent: tokenBoundStringsAgent
     inputs:
-      - :sortedChunks
+      chunks: :sortedChunks
     params:
       limit: 5000
   prompt:
@@ -103,14 +103,14 @@ nodes:
       model: gpt-4o-mini    
       query: "全文を日本語に翻訳して。余計なことは言わずに、翻訳した文章だけ答えて。あまり難しい単語は使わずに。"
     inputs:
-      - :prompt
+      prompt: :prompt
   OneShotQuery:
     agent: openAIAgent
     params:
     #   model: gpt-4o
       model: gpt-4o-mini    
     inputs:
-      - :prompt_query
+      prompt: :prompt_query
 
   # 結果出力（isResulet:trueのためにCopyAgent使っている）
   RagResult:
