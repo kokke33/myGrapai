@@ -8,7 +8,7 @@ nodes:
     console:
       after: true
   
-  nestedNode1:
+  nestedsuggestIdea:
     agent: "mapAgent"
     inputs:
       rows: [:First_prompt]
@@ -22,7 +22,7 @@ nodes:
           value: true
           # update: :llm.choices.$0.message.content
           update: :loopCheck.continue
-        # 最終結果の出力（nestedNode1の結果出力なのでisResult: true）
+        # 最終結果の出力（nestedsuggestIdeaの結果出力なのでisResult: true）
         information:
           value: {}
           update: :argumentsParser
@@ -46,7 +46,7 @@ nodes:
 
                 私が言うまで、あなたが追加情報を提供し、
                 改訂PromptセクションでPromptを更新するという反復プロセスを続けます。
-                その際、英語で考えて、日本語で出力してください。
+                その際、英語で考えて、すべて日本語で出力してください。
                 ステップバイステップで考えてください。
                 私が完成したと言うまで続けます。
                 
@@ -86,7 +86,7 @@ nodes:
               - type: function
                 function:
                   name: report
-                  description: ユーザーから取得した情報を報告してください。
+                  description: ユーザーから取得した情報を報告してください。すべて日本語になっていること。
                   parameters:
                     type: object
                     properties:
@@ -135,14 +135,16 @@ nodes:
             prompt: :llm.choices.$0.message.tool_calls.$0.function.arguments
           if: :llm.choices.$0.message.tool_calls
 
-        # Json形式だと「nestedNode1_result」で出力できないので
+        # Json形式だと「nestedsuggestIdea_result」で出力できないので
         # いったんcopyAgentを使う
         argumentsParser:
           # agent: jsonParserAgent
           agent: copyAgent
           inputs:
-            - :meaning_llm.choices.$0.message.content
-          if: :meaning_llm.choices.$0.message.content
+            - :llm.choices.$0.message.tool_calls.$0.function.arguments
+            # - :meaning_llm.choices.$0.message.content
+          if: :llm.choices.$0.message.tool_calls
+          # if: :meaning_llm.choices.$0.message.content
 
         # llmのfinish_reasonを確認。tool_calls以外は「stop」となる。
         # よって、stopの時にループする
@@ -158,7 +160,7 @@ nodes:
             - :llm.choices.$0.finish_reason
 
   # ネストノード２の結果をインプットにした処理
-  nestedNode1_result:
+  nestedsuggestIdea_result:
     agent: "stringTemplateAgent"
     params:
       template: "\e[32m完成したPrompt\e[0m: ${0}\n"
@@ -166,7 +168,8 @@ nodes:
     console:
       after: true
     # stringTemplateAgentのinputsは改行できない
-    inputs: [":nestedNode1.information"]
+    # inputs: [":nestedsuggestIdea.meaning_llm.choices.$0.message.content"]
+    inputs: [":nestedsuggestIdea.information"]
     # isResult: true
 
   #################################################### 
@@ -175,7 +178,7 @@ nodes:
   checkIdea:
     agent: "mapAgent"
     inputs:
-      rows: [:nestedNode1_result]
+      rows: [:nestedsuggestIdea_result]
     graph:
       version: 0.5
       loop:
@@ -217,7 +220,7 @@ nodes:
           # 画面出力しないためにコメントアウト
           # console:
           #   after: true
-          inputs: [":summaryChat.choices.$0.message.content"]
+          inputs: [":summaryChat_LLM.choices.$0.message.content"]
           # isResult: true
         # LLMの結果を配列に入れる
         reducer:
@@ -226,7 +229,7 @@ nodes:
             array: :summary
             item: :accumulationSummary   
 
-        node1:
+        suggestIdea:
           agent: stringTemplateAgent
           console:
             before: ...アイデア検討中    
@@ -234,7 +237,8 @@ nodes:
             template: >
               ベテランのプロジェクトマネージャとして、以下に関するアイデアを10個考えてください。
               理由は改行して２文字空けてから記載してください。
-              英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。
+              英語で考えて、結果はすべて日本語で表示すること。
+              また、マークダウン形式を使用しないでください。
             
               ${0}
 
@@ -245,7 +249,8 @@ nodes:
             - :summary
           if: :checkInput.continue
           # isResult: true
-        node1_LLM:
+          
+        suggestIdea_LLM:
           # agent: groqAgent
           # params:
           #   model: Llama3-70b-8192
@@ -254,23 +259,25 @@ nodes:
           params:
             model: gpt-4o-mini   
           inputs: 
-            prompt: :node1
+            prompt: :suggestIdea
           isResult: true
-        node2:
+
+        evaluationIdeas:
           agent: stringTemplateAgent
           console:
             before: ...アイデアの評価中      
-          inputs: [":node1_LLM.choices.$0.message.content","userInput"]
+          inputs: [":suggestIdea_LLM.choices.$0.message.content","userInput"]
           params:
             template: |
               ベテランのプロジェクトマネージャとして、以下のアイデアを評価してください。
               アイデアの後を記載後、その次の行に２文字空けてから評価内容を記載してください。
-              英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。
+              英語で考えて、結果はすべて日本語で表示すること。また、マークダウン形式を使用しないでください。
               [相談事]
               ${1}
               [アイデア]
               ${0}
-        node3:
+
+        evaluationIdeas_LLM:
           # agent: groqAgent
           # params:
           #   model: Llama3-70b-8192
@@ -279,41 +286,61 @@ nodes:
           params:
             model: gpt-4o-mini   
           inputs:
-            prompt: :node2
+            prompt: :evaluationIdeas
           # isResult: true
-        node4:
+
+        selectTop3:
           agent: stringTemplateAgent
           console:
             before: ...トップ３選定中     
-          inputs: [":node1_LLM.choices.$0.message.content", ":node3.choices.$0.message.content"]
+          inputs: [":suggestIdea_LLM.choices.$0.message.content", ":evaluationIdeas_LLM.choices.$0.message.content"]
           params:
             template: |
               このアイデア中から最も適切で効率的なアイデアのトップ３を選定し、
-              順番に第一優先、第二優先、第三優先とし、その選定理由も説明してください。
-              英語で考えて、結果は日本語で、かつマークダウン形式を使用しないでください。
+              順番に金メダル、銀メダル、銅メダルとし、その選定理由も説明してください。
+              英語で考えて、結果はすべて日本語で、かつマークダウン形式を使用しないでください。
               [アイデア]
               ${0}
               [評価]
               ${1}
-        node5:
+
+        selectTop3_LLM:
           # agent: groqAgent
           # params:
           #   model: Llama3-70b-8192  
             # model: llama-3.1-70b-versatile  
           agent: openAIAgent
           params:
+            # model: gpt-4o   
             model: gpt-4o-mini   
           inputs:
-            prompt: :node4
+            prompt: :selectTop3
+
         output:
           agent: stringTemplateAgent
-          inputs: [":node1_LLM.choices.$0.message.content", ":node3.choices.$0.message.content", ":node5.choices.$0.message.content",":nextQA.choices.$0.message.content",":summaryChat.choices.$0.message.content"]
+          inputs: [":suggestIdea_LLM.choices.$0.message.content", ":evaluationIdeas_LLM.choices.$0.message.content", ":selectTop3_LLM.choices.$0.message.content",":nextQA_LLM.choices.$0.message.content",":summaryChat_LLM.choices.$0.message.content"]
           params:
             # template: "\e[34m[解決策]\e[0m\n${0}\n\n\e[31m[評価]\e[0m\n${1}\n\n\e[31m[結果]\e[0m\n${2}"
             template: "\e[34m[解決策とその評価]\e[0m\n${1}\n\n\e[31m[結果]\e[0m\n${2}\n\n\e[31m[まとめ]\e[0m\n${4}\n\n\e[31m[次の質問]\e[0m\n${3}\n"
           console:
             after: true
+
         nextQA:
+          agent: stringTemplateAgent
+          inputs: [":userInput","selectTop3_LLM.choices.$0.message.content"]
+          params:
+            template: |
+              "あなたはベテランのプロジェクトマネージャです。
+              部下が提示してきた相談事に対するアイデアに対し質問を5個ほど提示して。
+              結果はすべて日本語で表示すること。
+              絶対にマークダウン形式を使用しないでください。
+              [相談事]
+              ${0}
+              [アイデア]
+              ${1}
+              "
+
+        nextQA_LLM:
           console:
             before: ...次の質問作成中  
           # agent: groqAgent
@@ -322,24 +349,36 @@ nodes:
           agent: openAIAgent
           params:
             model: gpt-4o-mini  
-            query: >
-              "以下のアイデアに対して次の質問を5個ほど提示して。
-              英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください。"
           inputs:
-            prompt: :node5.choices.$0.message.content      
+            prompt: :nextQA
+
         summaryChat:
+          agent: stringTemplateAgent
+          inputs: [":userInput","selectTop3_LLM.choices.$0.message.content"]
+          params:
+            template: |
+              "あなたは文章推敲のスペシャリストです。
+              以下のアイデアを第三者が見たときにわかるよう、
+              １つの文章にまとめてください。
+              結果はすべて日本語で表示すること。
+              絶対にマークダウン形式を使用しないでください"
+              [相談事]
+              ${0}
+              [アイデア]
+              ${1}
+              "
+        summaryChat_LLM:
           # agent: groqAgent
           # params:
           #   model: Llama3-70b-8192  
             # model: llama-3.1-70b-versatile  
           agent: openAIAgent
           params:
-            model: gpt-4o-mini  
-            query: >
-              "選定された3つのアイデアを1つの文章にまとめてください。
-              英語で考えて、結果は日本語で表示すること。また、マークダウン形式を使用しないでください"
+            # model: gpt-4o
+            model: gpt-4o-mini
           inputs:
-            prompt: :node5.choices.$0.message.content                
+            prompt: :summaryChat
+
         matome:
           agent: stringTemplateAgent
           console:
