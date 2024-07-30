@@ -229,13 +229,15 @@ nodes:
             array: :summary
             item: :accumulationSummary   
 
+        # アイデア検討
         suggestIdea:
           agent: stringTemplateAgent
           console:
             before: ...アイデア検討中    
           params:
             template: >
-              ベテランのプロジェクトマネージャとして、以下に関するアイデアを10個考えてください。
+              ベテランのプロジェクトマネージャとして、
+              以下に関するアイデアを3個考えてください。
               理由は改行して２文字空けてから記載してください。
               英語で考えて、結果はすべて日本語で表示すること。
               また、マークダウン形式を使用しないでください。
@@ -249,7 +251,6 @@ nodes:
             - :summary
           if: :checkInput.continue
           # isResult: true
-          
         suggestIdea_LLM:
           # agent: groqAgent
           # params:
@@ -262,6 +263,7 @@ nodes:
             prompt: :suggestIdea
           isResult: true
 
+        # アイデアの評価
         evaluationIdeas:
           agent: stringTemplateAgent
           console:
@@ -276,7 +278,6 @@ nodes:
               ${1}
               [アイデア]
               ${0}
-
         evaluationIdeas_LLM:
           # agent: groqAgent
           # params:
@@ -289,6 +290,7 @@ nodes:
             prompt: :evaluationIdeas
           # isResult: true
 
+        # トップ３選定
         selectTop3:
           agent: stringTemplateAgent
           console:
@@ -303,7 +305,6 @@ nodes:
               ${0}
               [評価]
               ${1}
-
         selectTop3_LLM:
           # agent: groqAgent
           # params:
@@ -316,6 +317,7 @@ nodes:
           inputs:
             prompt: :selectTop3
 
+        # 最終アウトプット生成
         output:
           agent: stringTemplateAgent
           inputs: [":suggestIdea_LLM.choices.$0.message.content", ":evaluationIdeas_LLM.choices.$0.message.content", ":selectTop3_LLM.choices.$0.message.content",":nextQA_LLM.choices.$0.message.content",":summaryChat_LLM.choices.$0.message.content"]
@@ -325,8 +327,11 @@ nodes:
           console:
             after: true
 
+        # 次の質問生成
         nextQA:
           agent: stringTemplateAgent
+          console:
+            before: ...次の質問作成中  
           inputs: [":userInput","selectTop3_LLM.choices.$0.message.content"]
           params:
             template: |
@@ -339,10 +344,7 @@ nodes:
               [アイデア]
               ${1}
               "
-
         nextQA_LLM:
-          console:
-            before: ...次の質問作成中  
           # agent: groqAgent
           # params:
           #   model: llama-3.1-70b-versatile  
@@ -352,6 +354,7 @@ nodes:
           inputs:
             prompt: :nextQA
 
+        # トップ３選定結果を１つの文章にまとめる
         summaryChat:
           agent: stringTemplateAgent
           inputs: [":userInput","selectTop3_LLM.choices.$0.message.content"]
@@ -379,6 +382,7 @@ nodes:
           inputs:
             prompt: :summaryChat
 
+        # これまでの会話の流れ
         matome:
           agent: stringTemplateAgent
           console:
@@ -386,5 +390,6 @@ nodes:
           inputs:
             - :summary
             - :output
+          if: :summary
           params:
             template: "\e[34m[これまでの会話の流れ]\e[0m\n${0}\n\n"

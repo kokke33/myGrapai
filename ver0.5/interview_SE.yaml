@@ -121,7 +121,7 @@ nodes:
     graph:
       loop:
         # ループ回数
-        count: 3
+        count: 7
       nodes:
         messages:
           value: []
