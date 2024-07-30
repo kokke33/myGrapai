@@ -332,7 +332,7 @@ nodes:
           agent: stringTemplateAgent
           console:
             before: ...次の質問作成中  
-          inputs: [":userInput","selectTop3_LLM.choices.$0.message.content"]
+          inputs: [":userInput","selectTop3_LLM.choices.$0.message.content","selectTop3_LLM"]
           params:
             template: |
               "あなたはベテランのプロジェクトマネージャです。
